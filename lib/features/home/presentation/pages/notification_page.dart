@@ -6,11 +6,11 @@ import 'package:lottie/lottie.dart' as lottie;
 
 import '../../../../app/theme/app_fonts.dart';
 import '../../../../app/theme/app_theme_colors.dart';
-import '../../data/models/alert_model.dart';
+import '../../data/models/notification_model.dart';
 import '../controllers/home_controller.dart';
 
-/// Lists fetched alerts/notifications - ported from BMD's NotificationPage,
-/// scoped to AWARE's actual data (AlertModel, already mapped from BMD's
+/// Lists fetched notifications - ported from BMD's NotificationPage, scoped
+/// to AWARE's actual data (NotificationModel, already mapped from BMD's
 /// notification/list API in HomeRepository). No TTS playback - BMD-only.
 class NotificationPage extends GetView<HomeController> {
   const NotificationPage({super.key});
@@ -20,7 +20,7 @@ class NotificationPage extends GetView<HomeController> {
     final c = AppThemeColors.of(Theme.of(context).brightness == Brightness.dark);
 
     // Always refresh on open so the list reflects the latest server state.
-    controller.fetchAlerts();
+    controller.fetchNotifications();
 
     return Scaffold(
       backgroundColor: c.scaffoldBg,
@@ -30,13 +30,13 @@ class NotificationPage extends GetView<HomeController> {
             style: AppFonts.style(fontSize: 18.sp, fontWeight: FontWeight.bold, color: c.textPrimary)),
       ),
       body: Obx(() {
-        if (controller.isAlertsLoading.value && controller.alerts.isEmpty) {
+        if (controller.isNotificationsLoading.value && controller.notifications.isEmpty) {
           return Center(
             child: lottie.Lottie.asset('assets/json/loading_anim.json', width: 80.r),
           );
         }
 
-        if (controller.alertsLoadError.value && controller.alerts.isEmpty) {
+        if (controller.notificationsLoadError.value && controller.notifications.isEmpty) {
           return Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -45,7 +45,7 @@ class NotificationPage extends GetView<HomeController> {
                 SizedBox(height: 10.h),
                 Text('failed_to_load'.tr, style: AppFonts.style(color: c.textSecondary)),
                 TextButton(
-                  onPressed: controller.fetchAlerts,
+                  onPressed: controller.fetchNotifications,
                   child: Text('retry'.tr, style: AppFonts.style(color: c.primary)),
                 ),
               ],
@@ -53,7 +53,7 @@ class NotificationPage extends GetView<HomeController> {
           );
         }
 
-        if (controller.alerts.isEmpty) {
+        if (controller.notifications.isEmpty) {
           return Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -68,12 +68,13 @@ class NotificationPage extends GetView<HomeController> {
         }
 
         return RefreshIndicator(
-          onRefresh: controller.fetchAlerts,
+          onRefresh: controller.fetchNotifications,
           child: ListView.separated(
             padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
-            itemCount: controller.alerts.length,
+            itemCount: controller.notifications.length,
             separatorBuilder: (_, __) => SizedBox(height: 12.h),
-            itemBuilder: (_, i) => _NotificationCard(alert: controller.alerts[i], colors: c),
+            itemBuilder: (_, i) =>
+                _NotificationCard(notification: controller.notifications[i], colors: c),
           ),
         );
       }),
@@ -82,14 +83,14 @@ class NotificationPage extends GetView<HomeController> {
 }
 
 class _NotificationCard extends StatelessWidget {
-  final AlertModel alert;
+  final NotificationModel notification;
   final AppThemeColors colors;
 
-  const _NotificationCard({required this.alert, required this.colors});
+  const _NotificationCard({required this.notification, required this.colors});
 
   @override
   Widget build(BuildContext context) {
-    final isAlert = alert.severity != 'normal';
+    final isAlert = notification.severity != 'normal';
     final iconBg = isAlert ? Colors.orange.withOpacity(0.12) : colors.primary.withOpacity(0.10);
     final iconColor = isAlert ? Colors.orange.shade700 : colors.primary;
 
@@ -132,7 +133,7 @@ class _NotificationCard extends StatelessWidget {
                             fontWeight: FontWeight.w600)),
                   ),
                 Text(
-                  alert.title.isNotEmpty ? alert.title : 'no_title'.tr,
+                  notification.title.isNotEmpty ? notification.title : 'no_title'.tr,
                   style: AppFonts.style(fontSize: 14.sp, color: colors.textPrimary, height: 1.2),
                 ),
                 SizedBox(height: 8.h),
@@ -141,7 +142,7 @@ class _NotificationCard extends StatelessWidget {
                     Icon(Icons.access_time, size: 12.sp, color: colors.textSecondary),
                     SizedBox(width: 4.w),
                     Text(
-                      DateFormat('d MMM, hh:mm a').format(alert.updatedAt),
+                      DateFormat('d MMM, hh:mm a').format(notification.updatedAt),
                       style: AppFonts.style(fontSize: 12.sp, color: colors.textSecondary),
                     ),
                   ],

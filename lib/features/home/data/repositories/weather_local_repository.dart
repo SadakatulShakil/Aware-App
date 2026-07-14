@@ -3,12 +3,12 @@ import 'dart:convert';
 import '../../../../core/database/app_database.dart';
 import '../../../../core/database/cache_entity.dart';
 import '../../../../core/utils/app_logger.dart';
-import '../models/alert_model.dart';
 import '../models/forecast_model.dart';
+import '../models/notification_model.dart';
 
-/// Floor-backed cache for forecast ('forecast_${lat}_${lon}') and alerts
-/// ('notifications_cache', matching BMD's cache key). Null-safe if the DB
-/// failed to open (same pattern as HazardRepository).
+/// Floor-backed cache for forecast ('forecast_${lat}_${lon}') and
+/// notifications ('notifications_cache', matching BMD's cache key).
+/// Null-safe if the DB failed to open (same pattern as HazardRepository).
 class WeatherLocalRepository {
   final AppDatabase? _db;
 
@@ -47,7 +47,7 @@ class WeatherLocalRepository {
     }
   }
 
-  Future<List<AlertModel>?> getCachedAlerts() async {
+  Future<List<NotificationModel>?> getCachedNotifications() async {
     final db = _db;
     if (db == null) return null;
     try {
@@ -55,25 +55,25 @@ class WeatherLocalRepository {
       if (row == null) return null;
       final list = jsonDecode(row.jsonData) as List;
       return list
-          .map((e) => AlertModel.fromJson(e as Map<String, dynamic>))
+          .map((e) => NotificationModel.fromJson(e as Map<String, dynamic>))
           .toList();
     } catch (e) {
-      AppLogger.w('Alerts cache read failed: $e');
+      AppLogger.w('Notifications cache read failed: $e');
       return null;
     }
   }
 
-  Future<void> cacheAlerts(List<AlertModel> alerts) async {
+  Future<void> cacheNotifications(List<NotificationModel> notifications) async {
     final db = _db;
     if (db == null) return;
     try {
       await db.cacheDao.upsert(CacheEntity(
         key: _notificationsKey,
-        jsonData: jsonEncode(alerts.map((a) => a.toJson()).toList()),
+        jsonData: jsonEncode(notifications.map((n) => n.toJson()).toList()),
         timestamp: DateTime.now().millisecondsSinceEpoch,
       ));
     } catch (e) {
-      AppLogger.w('Alerts cache write failed: $e');
+      AppLogger.w('Notifications cache write failed: $e');
     }
   }
 }

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:get/get.dart';
 
 import '../../../../app/theme/app_text_styles.dart';
 import '../../../../app/theme/app_theme_colors.dart';
+import '../../../../core/services/user_pref_service.dart';
 import '../../../hazard/data/models/hazard_entity.dart';
 
 /// 3x2 hazard grid per the sketch:
@@ -35,6 +37,7 @@ class HazardGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = AppThemeColors.of(Theme.of(context).brightness == Brightness.dark);
+    final isBangla = Get.find<UserPrefService>().isBangla;
 
     return GridView.builder(
       shrinkWrap: true,
@@ -78,11 +81,15 @@ class HazardGrid extends StatelessWidget {
                 ),
                 SizedBox(height: 8.h),
                 Text(hazard.titleBn,
-                    style: AppTextStyles.caption(c.textPrimary)
-                        .copyWith(fontWeight: FontWeight.w600)),
+                    style: isBangla
+                        ? AppTextStyles.caption(c.textPrimary)
+                            .copyWith(fontWeight: FontWeight.w600)
+                        : TextStyle(fontSize: 10.sp, color: c.textSecondary)),
                 Text(hazard.titleEn,
-                    style: TextStyle(
-                        fontSize: 10.sp, color: c.textSecondary)),
+                    style: isBangla
+                        ? TextStyle(fontSize: 10.sp, color: c.textSecondary)
+                        : AppTextStyles.caption(c.textPrimary)
+                            .copyWith(fontWeight: FontWeight.w600)),
               ],
             ),
           ),

@@ -9,6 +9,7 @@ class ApiEndpoints {
   static const alerts = '$baseUrl/alerts';
   static const hazards = '$baseUrl/hazards';
   static const services = '$baseUrl/services';
+  static const alertOngoing = '$baseUrl/alert/ongoing';
 
   // ---- BMD live weather source (ported 1:1 from BMD Abohawa) ----
   static const bmdBaseUrl = 'https://usf.bmd.gov.bd/api/app';

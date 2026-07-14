@@ -10,8 +10,9 @@ import '../../../../app/theme/app_theme_colors.dart';
 import '../../../../core/utils/convert_utils.dart';
 import '../../../../shared/widgets/bilingual_label.dart';
 import '../controllers/home_controller.dart';
-import '../widgets/alert_carousel.dart';
 import '../widgets/hazard_grid.dart';
+import '../widgets/notification_carousel.dart';
+import '../widgets/ongoing_bulletin_carousel.dart';
 import '../widgets/weather/base_weather_card.dart';
 import '../widgets/weather/weather_video_background.dart';
 
@@ -112,16 +113,31 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                     sliver: SliverList(
                       delegate: SliverChildListDelegate([
                         Obx(() {
-                          if (controller.alerts.isEmpty) {
+                          if (controller.notifications.isEmpty) {
                             return const SizedBox.shrink();
                           }
                           return Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              _sectionTitle(
-                                  colors, 'জরুরি সতর্কবার্তা', 'Emergency Alerts'),
+                              _sectionTitle(colors, 'বিজ্ঞপ্তি', 'Notifications'),
                               SizedBox(height: 10.h),
-                              AlertCarousel(alerts: controller.alerts.toList()),
+                              NotificationCarousel(
+                                  notifications: controller.notifications.toList()),
+                              SizedBox(height: 20.h),
+                            ],
+                          );
+                        }),
+                        Obx(() {
+                          if (controller.ongoingBulletins.isEmpty) {
+                            return const SizedBox.shrink();
+                          }
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _sectionTitle(colors, 'চলমান বুলেটিন', 'Ongoing Bulletin'),
+                              SizedBox(height: 10.h),
+                              OngoingBulletinCarousel(
+                                  bulletins: controller.ongoingBulletins.toList()),
                               SizedBox(height: 20.h),
                             ],
                           );
@@ -249,14 +265,13 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
             ),
           ),
           Positioned(
-            right: 4.w,
+            right: 8.w,
             top: 0,
             bottom: 0,
             child: Center(
-              child: IconButton(
-                icon: Icon(Icons.notifications_outlined, color: titleColor, size: 22.r),
-                onPressed: () => Get.toNamed(AppRoutes.notifications),
-              ),
+              child: GestureDetector(
+                onTap: () => Get.toNamed(AppRoutes.notifications),
+                  child: lottie.Lottie.asset('assets/json/notification_bell.json', width: 45.r))
             ),
           ),
         ],

@@ -10,8 +10,9 @@ import '../../../../core/services/user_pref_service.dart';
 import '../../../../core/utils/app_logger.dart';
 import '../../../hazard/data/models/hazard_entity.dart';
 import '../../../hazard/data/repositories/hazard_repository.dart';
-import '../../data/models/alert_model.dart';
 import '../../data/models/forecast_model.dart';
+import '../../data/models/notification_model.dart';
+import '../../data/models/ongoing_bulletin_model.dart';
 import '../../data/models/saved_location_model.dart';
 import '../../data/repositories/home_repository.dart';
 import '../../data/repositories/weather_local_repository.dart';
@@ -35,10 +36,13 @@ class HomeController extends GetxController {
   );
 
   // ── Existing AWARE sections (untouched behavior) ──
-  final RxList<AlertModel> alerts = <AlertModel>[].obs;
+  final RxList<NotificationModel> notifications = <NotificationModel>[].obs;
   final RxList<HazardEntity> hazards = <HazardEntity>[].obs;
-  final RxBool isAlertsLoading = false.obs;
-  final RxBool alertsLoadError = false.obs;
+  final RxBool isNotificationsLoading = false.obs;
+  final RxBool notificationsLoadError = false.obs;
+
+  final RxList<OngoingBulletinModel> ongoingBulletins = <OngoingBulletinModel>[].obs;
+  final RxBool isOngoingBulletinsLoading = false.obs;
 
   // ── Weather / location state (ported from BMD HomeController) ──
   final RxBool isLoaded = false.obs;
@@ -146,11 +150,11 @@ class HomeController extends GetxController {
     liveVideoUrl.value = userService.cachedLiveVideoUrl;
     liveWeatherType.value = userService.cachedLiveWeatherType;
 
-    // Cached alerts - carousel shows the last-known list instantly;
-    // fetchAlerts() replaces this with fresh data in the background.
-    final cachedAlerts = await _localRepo.getCachedAlerts();
-    if (cachedAlerts != null && cachedAlerts.isNotEmpty) {
-      alerts.assignAll(cachedAlerts);
+    // Cached notifications - carousel shows the last-known list instantly;
+    // fetchNotifications() replaces this with fresh data in the background.
+    final cachedNotifications = await _localRepo.getCachedNotifications();
+    if (cachedNotifications != null && cachedNotifications.isNotEmpty) {
+      notifications.assignAll(cachedNotifications);
     }
   }
 
@@ -160,7 +164,8 @@ class HomeController extends GetxController {
       await Future.wait([
         if (hasCoords) getForecast(lat.value, lon.value),
         if (hasCoords) fetchLiveWeather(lat.value, lon.value),
-        fetchAlerts(),
+        fetchNotifications(),
+        fetchOngoingBulletins(),
         fetchHazards(),
       ]);
     });
@@ -259,21 +264,34 @@ class HomeController extends GetxController {
     }
   }
 
-  Future<void> fetchAlerts() async {
-    isAlertsLoading.value = true;
+  Future<void> fetchNotifications() async {
+    isNotificationsLoading.value = true;
     try {
-      final fresh = await _homeRepo.getAlerts(lang: userService.appLanguage);
-      alerts.assignAll(fresh);
-      alertsLoadError.value = false;
-      await _localRepo.cacheAlerts(fresh);
+      final fresh = await _homeRepo.getNotifications(lang: userService.appLanguage);
+      notifications.assignAll(fresh);
+      notificationsLoadError.value = false;
+      await _localRepo.cacheNotifications(fresh);
     } catch (e) {
       // Network/API failure - keep whatever is currently displayed
       // (cached data applied in getSharedPrefDataFromCache, or the
       // previous successful fetch).
-      if (alerts.isEmpty) alertsLoadError.value = true;
-      AppLogger.e('fetchAlerts failed', e);
+      if (notifications.isEmpty) notificationsLoadError.value = true;
+      AppLogger.e('fetchNotifications failed', e);
     } finally {
-      isAlertsLoading.value = false;
+      isNotificationsLoading.value = false;
+    }
+  }
+
+  Future<void> fetchOngoingBulletins() async {
+    isOngoingBulletinsLoading.value = true;
+    try {
+      final fresh = await _homeRepo.getOngoingBulletins(lang: userService.appLanguage);
+      ongoingBulletins.assignAll(fresh);
+    } catch (e) {
+      // Keep whatever is currently displayed on failure.
+      AppLogger.e('fetchOngoingBulletins failed', e);
+    } finally {
+      isOngoingBulletinsLoading.value = false;
     }
   }
 
@@ -289,7 +307,8 @@ class HomeController extends GetxController {
     await Future.wait([
       if (lat.value.isNotEmpty) getForecast(lat.value, lon.value),
       if (lat.value.isNotEmpty) fetchLiveWeather(lat.value, lon.value),
-      fetchAlerts(),
+      fetchNotifications(),
+      fetchOngoingBulletins(),
       fetchHazards(),
     ]);
   }
