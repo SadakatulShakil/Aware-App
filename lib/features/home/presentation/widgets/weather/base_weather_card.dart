@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:get/get.dart';
 
 import '../../../../../app/theme/app_fonts.dart';
 import '../../../../../app/theme/app_theme_colors.dart';
 import '../../../../../core/utils/convert_utils.dart';
 
 /// Ported 1:1 from BMD's BaseWeatherCard - type tag, big temp, feels-like,
-/// HT/LT/rainfall overlay bar. The BMD survey feedback button is removed
-/// (BMD-only feature, not part of AWARE).
+/// HT/LT/rainfall overlay bar. BMD's survey feedback button is replaced
+/// with an "Incident Report" button (same position/style, no API yet).
 class BaseWeatherCard extends StatelessWidget {
   final String temp;
   final String tempMax;
@@ -19,7 +20,6 @@ class BaseWeatherCard extends StatelessWidget {
   final String feelsLike;
   final String type;
   final String tempUnit;
-  final bool isBangla;
 
   const BaseWeatherCard({
     super.key,
@@ -32,7 +32,6 @@ class BaseWeatherCard extends StatelessWidget {
     required this.feelsLike,
     required this.type,
     required this.tempUnit,
-    required this.isBangla,
   });
 
   @override
@@ -58,7 +57,9 @@ class BaseWeatherCard extends StatelessWidget {
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
                 decoration: BoxDecoration(
-                    color: tagBackground, borderRadius: BorderRadius.circular(4.r)),
+                    color: isDark
+                        ? Colors.white24
+                        : Colors.black.withValues(alpha: .30), borderRadius: BorderRadius.circular(4.r)),
                 child: Text(type.replaceAll('\n', ' '),
                     style: TextStyle(color: mainTextColor, fontSize: 13.sp)),
               ),
@@ -74,22 +75,31 @@ class BaseWeatherCard extends StatelessWidget {
                           height: 0.8)),
                   Padding(
                     padding: EdgeInsets.only(bottom: 8.h, left: 2.w),
-                    child: Text(isBangla ? '°সে' : '°C',
+                    child: Text('temp_unit_full'.tr,
                         style: TextStyle(
                             fontSize: 24.sp, color: mainTextColor, fontWeight: FontWeight.bold)),
                   ),
                 ],
               ),
-              Text('$feelsLike ${isBangla ? 'সে' : 'C'}',
-                  style: AppFonts.style(
-                      fontSize: 14.sp, fontWeight: FontWeight.w700, color: mainTextColor)),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Text('$feelsLike ${'temp_unit_short'.tr}',
+                      style: AppFonts.style(
+                          fontSize: 14.sp, fontWeight: FontWeight.w700, color: mainTextColor)),
+                  _buildIncidentReportButton(context),
+                ],
+              ),
             ],
           ),
           SizedBox(height: 8.h),
           Container(
             padding: EdgeInsets.symmetric(vertical: 6.h, horizontal: 16.w),
             decoration:
-                BoxDecoration(color: cardBackground, borderRadius: BorderRadius.circular(8.r)),
+                BoxDecoration(color: isDark
+                    ? Colors.white24
+                    : Colors.black.withValues(alpha: .30), borderRadius: BorderRadius.circular(8.r)),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -117,6 +127,33 @@ class BaseWeatherCard extends StatelessWidget {
           ),
           SizedBox(height: 3.h),
         ],
+      ),
+    );
+  }
+
+  Widget _buildIncidentReportButton(BuildContext context) {
+    return GestureDetector(
+      onTap: () => Get.snackbar(
+        'incident_report'.tr,
+        'incident_report_coming_soon'.tr,
+        snackPosition: SnackPosition.BOTTOM,
+      ),
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 6.h),
+        decoration: BoxDecoration(
+          color: Colors.black.withOpacity(0.25),
+          borderRadius: BorderRadius.circular(10.r),
+          border: Border.all(color: Colors.white54, width: 1.w),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.report_outlined, size: 14.r, color: Colors.white),
+            SizedBox(width: 6.w),
+            Text('incident_report'.tr,
+                style: TextStyle(fontSize: 12.sp, color: Colors.white, fontWeight: FontWeight.bold)),
+          ],
+        ),
       ),
     );
   }

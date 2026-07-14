@@ -59,10 +59,10 @@ class AppThemeColors {
       isDark ? const Color(0xFF0B2540) : const Color(0xFF3D82C4);
 
   // ---- BMD weather header (ported 1:1 — collapsing SliverPersistentHeader) ----
-  Color get scaffoldGradientTop =>
-      isDark ? const Color(0xFF1C4972) : const Color(0xFFCFD8DC);
-  Color get scaffoldGradientBottom =>
-      isDark ? const Color(0xFF16426A) : const Color(0xFFFFFFFF);
+  // AWARE uses its own scaffold background here (not BMD's blues) so the
+  // body/collapsed header bar match AWARE's theme instead of looking like BMD.
+  Color get scaffoldGradientTop => scaffoldBg;
+  Color get scaffoldGradientBottom => scaffoldBg;
 
   List<Color> get headerGradientColors => isDark
       ? const [Color(0x8C1B4871), Color(0x592997E2), Color(0xB316426A)]

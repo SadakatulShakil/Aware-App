@@ -3,8 +3,8 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 
-import '../../../../app/theme/app_text_styles.dart';
 import '../../../../app/theme/app_theme_colors.dart';
+import '../../../../shared/widgets/bilingual_label.dart';
 import '../../../home/presentation/widgets/hazard_grid.dart';
 import '../controllers/hazard_controller.dart';
 
@@ -18,8 +18,14 @@ class HazardPage extends GetView<HazardController> {
     return Scaffold(
       backgroundColor: c.scaffoldBg,
       appBar: AppBar(
-        title: Text('দুর্যোগ / Hazards',
-            style: AppTextStyles.sectionTitle(c.textPrimary)),
+        title: BilingualLabel(
+          bn: 'দুর্যোগ',
+          en: 'Hazards',
+          activeColor: c.textPrimary,
+          inactiveColor: c.textSecondary,
+          activeSize: 18,
+          inactiveSize: 13,
+        ),
       ),
       body: Obx(() {
         if (controller.isLoading.value) {
@@ -34,6 +40,9 @@ class HazardPage extends GetView<HazardController> {
             itemBuilder: (_, i) {
               final hazard = controller.hazards[i];
               final severityColor = c.severityOf(hazard.severity);
+              final dateStr = DateFormat('d MMM yyyy')
+                  .format(DateTime.fromMillisecondsSinceEpoch(hazard.updatedAt));
+              final severityLabels = _severityLabels(hazard.severity);
               return Container(
                 padding: EdgeInsets.all(14.w),
                 decoration: BoxDecoration(
@@ -56,30 +65,44 @@ class HazardPage extends GetView<HazardController> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('${hazard.titleBn} (${hazard.titleEn})',
-                              style: AppTextStyles.title(c.textPrimary)),
+                          BilingualLabel(
+                            bn: hazard.titleBn,
+                            en: hazard.titleEn,
+                            activeColor: c.textPrimary,
+                            inactiveColor: c.textSecondary,
+                            activeSize: 15,
+                            inactiveSize: 11,
+                          ),
                           SizedBox(height: 2.h),
-                          Text(
-                              hazard.summary ??
-                                  'সর্বশেষ আপডেট: ${DateFormat('d MMM yyyy').format(DateTime.fromMillisecondsSinceEpoch(hazard.updatedAt))}',
-                              style:
-                                  AppTextStyles.caption(c.textSecondary)),
+                          hazard.summary != null
+                              ? Text(hazard.summary!,
+                                  style: TextStyle(fontSize: 12.sp, color: c.textSecondary))
+                              : BilingualLabel(
+                                  bn: 'সর্বশেষ আপডেট: $dateStr',
+                                  en: 'Last updated: $dateStr',
+                                  activeColor: c.textSecondary,
+                                  inactiveColor: c.textSecondary,
+                                  activeSize: 12,
+                                  inactiveSize: 10,
+                                ),
                         ],
                       ),
                     ),
                     Container(
-                      padding: EdgeInsets.symmetric(
-                          horizontal: 10.w, vertical: 4.h),
+                      padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
                       decoration: BoxDecoration(
                         color: severityColor.withOpacity(0.12),
                         borderRadius: BorderRadius.circular(20.r),
                       ),
-                      child: Text(
-                          (hazard.severity ?? 'Normal').capitalizeFirst!,
-                          style: TextStyle(
-                              fontSize: 11.sp,
-                              fontWeight: FontWeight.w600,
-                              color: severityColor)),
+                      child: BilingualLabel(
+                        bn: severityLabels.$1,
+                        en: severityLabels.$2,
+                        activeColor: severityColor,
+                        inactiveColor: severityColor.withOpacity(0.7),
+                        activeSize: 11,
+                        inactiveSize: 9,
+                        activeWeight: FontWeight.w600,
+                      ),
                     ),
                   ],
                 ),
@@ -89,5 +112,18 @@ class HazardPage extends GetView<HazardController> {
         );
       }),
     );
+  }
+
+  (String, String) _severityLabels(String? severity) {
+    switch (severity?.toLowerCase()) {
+      case 'moderate':
+        return ('মাঝারি', 'Moderate');
+      case 'heavy':
+        return ('তীব্র', 'Heavy');
+      case 'extreme':
+        return ('চরম', 'Extreme');
+      default:
+        return ('স্বাভাবিক', 'Normal');
+    }
   }
 }

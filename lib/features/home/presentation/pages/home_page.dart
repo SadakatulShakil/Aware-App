@@ -4,10 +4,11 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:lottie/lottie.dart' as lottie;
 
+import '../../../../app/routes/app_routes.dart';
 import '../../../../app/theme/app_fonts.dart';
-import '../../../../app/theme/app_text_styles.dart';
 import '../../../../app/theme/app_theme_colors.dart';
 import '../../../../core/utils/convert_utils.dart';
+import '../../../../shared/widgets/bilingual_label.dart';
 import '../controllers/home_controller.dart';
 import '../widgets/alert_carousel.dart';
 import '../widgets/hazard_grid.dart';
@@ -110,10 +111,21 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                     ),
                     sliver: SliverList(
                       delegate: SliverChildListDelegate([
-                        _sectionTitle(colors, 'জরুরি সতর্কবার্তা', 'Emergency Alerts'),
-                        SizedBox(height: 10.h),
-                        AlertCarousel(alerts: controller.alerts),
-                        SizedBox(height: 20.h),
+                        Obx(() {
+                          if (controller.alerts.isEmpty) {
+                            return const SizedBox.shrink();
+                          }
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _sectionTitle(
+                                  colors, 'জরুরি সতর্কবার্তা', 'Emergency Alerts'),
+                              SizedBox(height: 10.h),
+                              AlertCarousel(alerts: controller.alerts.toList()),
+                              SizedBox(height: 20.h),
+                            ],
+                          );
+                        }),
                         _sectionTitle(colors, 'দুর্যোগ পরিস্থিতি', 'Hazards'),
                         SizedBox(height: 10.h),
                         HazardGrid(
@@ -202,37 +214,52 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     return SizedBox(
       height: 56.h,
       width: double.infinity,
-      child: Center(
-        child: GestureDetector(
-          onTap: controller.openLocationSelector,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Row(
+      child: Stack(
+        children: [
+          Center(
+            child: GestureDetector(
+              onTap: controller.openLocationSelector,
+              child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  ConstrainedBox(
-                    constraints: BoxConstraints(maxWidth: 220.w),
-                    child: Obx(() => Text(
-                          controller.currentLocationName.value,
-                          overflow: TextOverflow.ellipsis,
-                          style: AppFonts.style(
-                              fontSize: fontSize, color: titleColor, fontWeight: FontWeight.w600),
-                        )),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      ConstrainedBox(
+                        constraints: BoxConstraints(maxWidth: 220.w),
+                        child: Obx(() => Text(
+                              controller.currentLocationName.value,
+                              overflow: TextOverflow.ellipsis,
+                              style: AppFonts.style(
+                                  fontSize: fontSize, color: titleColor, fontWeight: FontWeight.w600),
+                            )),
+                      ),
+                      Icon(Icons.keyboard_arrow_down, color: titleColor, size: 20.r),
+                    ],
                   ),
-                  Icon(Icons.keyboard_arrow_down, color: titleColor, size: 20.r),
+                  Obx(() {
+                    final current = controller.forecast.value?.result?.current;
+                    return Text(
+                      "${current?.weekday ?? ''}, ${current?.date ?? ''}",
+                      style: AppFonts.style(fontSize: 11.sp, color: subtitleColor),
+                    );
+                  }),
                 ],
               ),
-              Obx(() {
-                final current = controller.forecast.value?.result?.current;
-                return Text(
-                  "${current?.weekday ?? ''}, ${current?.date ?? ''}",
-                  style: AppFonts.style(fontSize: 11.sp, color: subtitleColor),
-                );
-              }),
-            ],
+            ),
           ),
-        ),
+          Positioned(
+            right: 4.w,
+            top: 0,
+            bottom: 0,
+            child: Center(
+              child: IconButton(
+                icon: Icon(Icons.notifications_outlined, color: titleColor, size: 22.r),
+                onPressed: () => Get.toNamed(AppRoutes.notifications),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -261,8 +288,35 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
         }
         return _buildWeatherCard();
       }
+      // No forecast yet. Only show the "No Data" / retry card once we've
+      // genuinely tried and failed - otherwise it flashes on every cold
+      // start for the split second before the first fetch/GPS resolve
+      // completes.
+      final stillResolving = controller.isForecastLoading.value ||
+          (controller.lat.value.isEmpty && controller.isSyncingLocation.value);
+      if (stillResolving) {
+        return _buildHeaderLoading(controller.lat.value.isEmpty);
+      }
       return _buildNoDataCard();
     });
+  }
+
+  Widget _buildHeaderLoading(bool isResolvingLocation) {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 24.h),
+      width: double.infinity,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          lottie.Lottie.asset('assets/json/loading_anim.json', width: 70.r, height: 70.r, repeat: true),
+          SizedBox(height: 8.h),
+          Text(
+            (isResolvingLocation ? 'resolving_location' : 'loading_weather').tr,
+            style: AppFonts.style(fontSize: 14.sp, color: Colors.white70),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildWeatherCard() {
@@ -274,7 +328,6 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     if (current == null) return const SizedBox.shrink();
 
     return Obx(() {
-      final isBangla = controller.userService.isBangla;
       final liveType = controller.liveWeatherType.value;
       final displayType = liveType.isNotEmpty ? liveType : (current.type ?? 'N/A');
 
@@ -282,13 +335,11 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
       final liveFeelsLike = controller.liveFeelsLike.value;
       final liveRainfall = controller.liveRainfall.value;
 
-      final displayTemp = liveTemp.isNotEmpty ? liveTemp : (current.temp?.valAvg ?? '0');
+      final displayTemp = liveRainfall.isNotEmpty ? liveTemp : (current.temp?.valAvg ?? '0');
       final displayFeelsLike = WeatherUtils.roundAndLocalize(
-          liveFeelsLike.isNotEmpty ? liveFeelsLike : current.feels);
+          liveRainfall.isNotEmpty ? liveFeelsLike : current.feels);
       final displayRain =
           liveRainfall.isNotEmpty ? WeatherUtils.roundAndLocalize(liveRainfall) : null;
-
-      final feelsLabel = isBangla ? 'অনুভূত হচ্ছে' : 'Feels like';
 
       return BaseWeatherCard(
         temp: displayTemp,
@@ -298,16 +349,14 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
         rainMin: displayRain ?? current.rf?.valMin ?? '0',
         rainMax: displayRain ?? current.rf?.valMax ?? '0',
         rainUnit: current.rfUnit ?? 'mm',
-        feelsLike: '$feelsLabel $displayFeelsLike°',
+        feelsLike: '${'feels_like_label'.tr} $displayFeelsLike°',
         type: displayType,
-        isBangla: isBangla,
       );
     });
   }
 
   Widget _buildLocationBanner(AppThemeColors colors) {
     return Obx(() {
-      final isBangla = controller.userService.isBangla;
       final serviceOn = controller.locationServiceEnabled.value;
       final permissionGranted = controller.locationPermissionGranted.value;
       final isUpdating = controller.isLocationUpdating.value;
@@ -320,17 +369,13 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
       final IconData bannerIcon;
 
       if (!permissionGranted) {
-        message = isBangla
-            ? 'সঠিক আবহাওয়া দেখতে অবস্থান অনুমতি দিন'
-            : 'Allow location to see weather for your area';
-        buttonLabel = isBangla ? 'অনুমতি দিন' : 'Allow';
+        message = 'banner_allow_location'.tr;
+        buttonLabel = 'allow'.tr;
         bannerColor = Colors.blue.shade700;
         bannerIcon = Icons.location_off_outlined;
       } else {
-        message = isBangla
-            ? 'সঠিক আবহাওয়া দেখতে লোকেশন চালু করুন'
-            : 'Turn on location for accurate local weather';
-        buttonLabel = isBangla ? 'চালু করুন' : 'Enable';
+        message = 'banner_turn_on_location'.tr;
+        buttonLabel = 'enable'.tr;
         bannerColor = Colors.orange.shade700;
         bannerIcon = Icons.location_disabled_outlined;
       }
@@ -387,16 +432,13 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   }
 
   Widget _sectionTitle(AppThemeColors c, String bn, String en) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.end,
-      children: [
-        Text(bn, style: AppTextStyles.sectionTitle(c.textPrimary)),
-        SizedBox(width: 6.w),
-        Padding(
-          padding: EdgeInsets.only(bottom: 2.h),
-          child: Text(en, style: AppTextStyles.caption(c.textSecondary)),
-        ),
-      ],
+    return BilingualLabel(
+      bn: bn,
+      en: en,
+      activeColor: c.textPrimary,
+      inactiveColor: c.textSecondary,
+      activeSize: 17,
+      inactiveSize: 12,
     );
   }
 
@@ -410,7 +452,6 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   }
 
   Widget _buildNoDataCard() {
-    final isBangla = controller.userService.isBangla;
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 30.h),
       width: double.infinity,
@@ -420,27 +461,27 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
           Icon(Icons.cloud_off_rounded, color: Colors.white70, size: 50.r),
           SizedBox(height: 12.h),
           Text(
-            isBangla ? 'কোন তথ্য পাওয়া যায়নি' : 'No Data Available',
+            'no_data_available'.tr,
             style:
                 AppFonts.style(fontWeight: FontWeight.bold, fontSize: 20.sp, color: Colors.white),
           ),
           Text(
-            isBangla
-                ? 'অনুগ্রহ করে আপনার ইন্টারনেট সংযোগ পরীক্ষা করুন'
-                : 'Please check your internet connection to load data',
+            'check_internet_connection'.tr,
             style: AppFonts.style(fontSize: 14.sp, color: Colors.white70),
             textAlign: TextAlign.center,
           ),
           SizedBox(height: 15.h),
           ElevatedButton(
-            onPressed: controller.onRefresh,
+            onPressed: controller.retryLoadingData,
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.white24,
-              foregroundColor: Colors.white,
+              backgroundColor: Colors.white.withOpacity(0.92),
+              foregroundColor: Colors.black87,
               elevation: 0,
+              padding: EdgeInsets.symmetric(horizontal: 28.w, vertical: 12.h),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.r)),
             ),
-            child: Text(isBangla ? 'পুনরায় চেষ্টা করুন' : 'Retry'),
+            child: Text('retry'.tr,
+                style: AppFonts.style(fontWeight: FontWeight.w700, fontSize: 14.sp)),
           ),
         ],
       ),
@@ -448,7 +489,6 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   }
 
   Widget _buildLocationSwitchingLoader() {
-    final isBangla = controller.userService.isBangla;
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 24.h),
       width: double.infinity,
@@ -458,7 +498,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
           lottie.Lottie.asset('assets/json/loading_anim.json', width: 70.r, height: 70.r, repeat: true),
           SizedBox(height: 8.h),
           Text(
-            isBangla ? 'লোকেশন পরিবর্তন হচ্ছে...' : 'Switching location...',
+            'switching_location'.tr,
             style: AppFonts.style(fontSize: 14.sp, color: Colors.white70),
           ),
         ],

@@ -5,6 +5,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 
 import '../../../../core/services/location_service.dart';
+import '../../../../core/services/notification_service.dart';
 import '../../../../core/services/user_pref_service.dart';
 import '../../../../core/utils/app_logger.dart';
 import '../../../hazard/data/models/hazard_entity.dart';
@@ -36,6 +37,8 @@ class HomeController extends GetxController {
   // ── Existing AWARE sections (untouched behavior) ──
   final RxList<AlertModel> alerts = <AlertModel>[].obs;
   final RxList<HazardEntity> hazards = <HazardEntity>[].obs;
+  final RxBool isAlertsLoading = false.obs;
+  final RxBool alertsLoadError = false.obs;
 
   // ── Weather / location state (ported from BMD HomeController) ──
   final RxBool isLoaded = false.obs;
@@ -63,7 +66,7 @@ class HomeController extends GetxController {
   final RxBool locationPermissionGranted = true.obs;
   final RxBool locationServiceEnabled = true.obs;
   final RxBool isLocationUpdating = false.obs;
-  final RxBool _isSyncing = false.obs;
+  final RxBool isSyncingLocation = false.obs;
 
   DateTime? _lastGPSFetchTime;
   double? _lastLat;
@@ -92,6 +95,7 @@ class HomeController extends GetxController {
       () => _autoSyncGPSLocation(),
     );
     _startLocationServiceListener();
+    NotificationService.instance.handlePendingFcmNavigation();
   }
 
   @override
@@ -141,6 +145,13 @@ class HomeController extends GetxController {
     // for the live API to return.
     liveVideoUrl.value = userService.cachedLiveVideoUrl;
     liveWeatherType.value = userService.cachedLiveWeatherType;
+
+    // Cached alerts - carousel shows the last-known list instantly;
+    // fetchAlerts() replaces this with fresh data in the background.
+    final cachedAlerts = await _localRepo.getCachedAlerts();
+    if (cachedAlerts != null && cachedAlerts.isNotEmpty) {
+      alerts.assignAll(cachedAlerts);
+    }
   }
 
   void _refreshAllDataInBackground() {
@@ -249,10 +260,20 @@ class HomeController extends GetxController {
   }
 
   Future<void> fetchAlerts() async {
+    isAlertsLoading.value = true;
     try {
-      alerts.assignAll(await _homeRepo.getAlerts());
+      final fresh = await _homeRepo.getAlerts(lang: userService.appLanguage);
+      alerts.assignAll(fresh);
+      alertsLoadError.value = false;
+      await _localRepo.cacheAlerts(fresh);
     } catch (e) {
+      // Network/API failure - keep whatever is currently displayed
+      // (cached data applied in getSharedPrefDataFromCache, or the
+      // previous successful fetch).
+      if (alerts.isEmpty) alertsLoadError.value = true;
       AppLogger.e('fetchAlerts failed', e);
+    } finally {
+      isAlertsLoading.value = false;
     }
   }
 
@@ -415,8 +436,8 @@ class HomeController extends GetxController {
   /// Silent cold-start GPS sync - never shows dialogs. If it fails and
   /// there is nothing on screen yet, falls back to the add-location flow.
   Future<void> _autoSyncGPSLocation() async {
-    if (_isSyncing.value) return;
-    _isSyncing.value = true;
+    if (isSyncingLocation.value) return;
+    isSyncingLocation.value = true;
     try {
       final success = await _locationService.getLocation(
         onSettingsOpened: () {},
@@ -437,7 +458,22 @@ class HomeController extends GetxController {
         await openAddLocationFlow();
       }
     } finally {
-      _isSyncing.value = false;
+      isSyncingLocation.value = false;
+    }
+  }
+
+  /// Called from the header's "Retry" button. If we have coordinates,
+  /// this is a plain data refresh. If we don't (permission denied / GPS
+  /// never resolved), retrying the same forecast call would be a no-op
+  /// - so resolve a location first, falling back to the manual picker.
+  Future<void> retryLoadingData() async {
+    if (lat.value.isEmpty || lon.value.isEmpty) {
+      if (!isSyncingLocation.value) await _autoSyncGPSLocation();
+      if (lat.value.isEmpty || lon.value.isEmpty) {
+        await openAddLocationFlow();
+      }
+    } else {
+      await onRefresh();
     }
   }
 
@@ -479,7 +515,7 @@ class HomeController extends GetxController {
               child: Row(
                 children: [
                   Text(
-                    userService.isBangla ? 'অবস্থানের তালিকা' : 'Location list',
+                    'location_list_title'.tr,
                     style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                   ),
                   const Spacer(),
@@ -491,9 +527,7 @@ class HomeController extends GetxController {
             Expanded(
               child: Obx(() {
                 if (savedLocations.isEmpty) {
-                  return Center(
-                    child: Text(userService.isBangla ? 'কোনো তথ্য নেই' : 'No data'),
-                  );
+                  return Center(child: Text('no_data'.tr));
                 }
                 final gpsLocation =
                     savedLocations.firstWhereOrNull((l) => l.id == 'auto_gps');
@@ -513,7 +547,7 @@ class HomeController extends GetxController {
                     ListTile(
                       leading: const Icon(Icons.add_location_alt_outlined, color: Colors.blue),
                       title: Text(
-                        userService.isBangla ? 'লোকেশন যোগ করুন' : 'Add Location',
+                        'add_location'.tr,
                         style: const TextStyle(color: Colors.blue),
                       ),
                       onTap: () async {
@@ -590,16 +624,16 @@ class HomeController extends GetxController {
                         text: isBn ? loc.displayName : loc.displayNameEn);
                     final newName = await Get.dialog<String>(
                       AlertDialog(
-                        title: Text(isBn ? 'নাম পরিবর্তন করুন' : 'Rename location'),
+                        title: Text('rename_location'.tr),
                         content: TextField(controller: textController, autofocus: true),
                         actions: [
                           TextButton(
                             onPressed: () => Get.back(result: null),
-                            child: Text(isBn ? 'বাতিল' : 'Cancel'),
+                            child: Text('cancel'.tr),
                           ),
                           ElevatedButton(
                             onPressed: () => Get.back(result: textController.text.trim()),
-                            child: Text(isBn ? 'সংরক্ষণ' : 'Save'),
+                            child: Text('save'.tr),
                           ),
                         ],
                       ),
@@ -612,9 +646,9 @@ class HomeController extends GetxController {
                   }
                 },
                 itemBuilder: (_) => [
-                  PopupMenuItem(value: 'edit', child: Text(isBn ? 'সম্পাদনা' : 'Edit')),
+                  PopupMenuItem(value: 'edit', child: Text('edit'.tr)),
                   if (!isSelected)
-                    PopupMenuItem(value: 'delete', child: Text(isBn ? 'মুছুন' : 'Delete')),
+                    PopupMenuItem(value: 'delete', child: Text('delete'.tr)),
                 ],
               ),
           ],
@@ -626,26 +660,33 @@ class HomeController extends GetxController {
   Future<void> selectSavedLocation(SavedLocation loc) async {
     try {
       final ok = await userService.setCurrentLocationByName(loc.displayName);
-      if (ok) {
-        currentLocationName.value =
-            userService.isBangla ? loc.displayName : loc.displayNameEn;
-
-        isLocationSwitching.value = true;
-        _liveWeatherRequestId++;
-        liveVideoUrl.value = '';
-        liveWeatherType.value = '';
-        liveRainfall.value = '';
-        liveTemp.value = '';
-        liveFeelsLike.value = '';
-        liveIcon.value = '';
-        await userService.clearLiveWeatherCache();
-
-        await getSharedPrefData();
-        await loadSavedLocations();
-
-        isLocationSwitching.value = false;
+      if (!ok) {
+        Get.back();
+        return;
       }
+
+      currentLocationName.value =
+          userService.isBangla ? loc.displayName : loc.displayNameEn;
+
+      // Close the picker immediately - otherwise it stays open (covering
+      // the bottom ~60% of the screen) for the whole fetch and the
+      // header's switching loader is never actually seen by the user.
       Get.back();
+
+      isLocationSwitching.value = true;
+      _liveWeatherRequestId++;
+      liveVideoUrl.value = '';
+      liveWeatherType.value = '';
+      liveRainfall.value = '';
+      liveTemp.value = '';
+      liveFeelsLike.value = '';
+      liveIcon.value = '';
+      await userService.clearLiveWeatherCache();
+
+      await getSharedPrefData();
+      await loadSavedLocations();
+
+      isLocationSwitching.value = false;
     } catch (e) {
       isLocationSwitching.value = false;
       AppLogger.e('selectSavedLocation failed', e);

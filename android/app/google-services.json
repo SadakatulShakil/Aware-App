@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1085203095038",
+    "project_id": "aware-91c69",
+    "storage_bucket": "aware-91c69.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1085203095038:android:f514fc8fe04315aa6634af",
+        "android_client_info": {
+          "package_name": "bd.gov.ddm.aware"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDtC_BGH0ykbJKIU5OKOCVoaW5ZIUjHO-s"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

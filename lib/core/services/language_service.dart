@@ -1,12 +1,14 @@
+import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 
 import '../../features/home/presentation/controllers/home_controller.dart';
 import 'user_pref_service.dart';
 
-/// Reactive language holder. AWARE has no Get.locale/translations - every
-/// string is an inline bn/en ternary reading UserPrefService().isBangla.
-/// This service exists only so widgets/Settings can react to a change and
-/// so the forecast (Accept-Language-driven) gets refetched.
+/// Reactive language holder, backed by GetX's Translations (see
+/// LocalizationString) so `.tr` strings switch via Get.updateLocale().
+/// A handful of runtime-computed strings (temperature values, digit
+/// localization) still read UserPrefService().isBangla directly since
+/// they aren't static labels.
 class LanguageService extends GetxService {
   final UserPrefService _prefs = Get.find<UserPrefService>();
 
@@ -15,6 +17,7 @@ class LanguageService extends GetxService {
   /// Called once from Splash after prefs are ready.
   void applySaved() {
     code.value = _prefs.appLanguage;
+    Get.updateLocale(Locale(code.value));
   }
 
   Future<void> setLanguage(String newCode) async {
@@ -33,8 +36,7 @@ class LanguageService extends GetxService {
       }
     }
 
-    // No Get.locale/translations in this app - force a full rebuild so
-    // every inline bn/en ternary re-evaluates against the new language.
-    Get.forceAppUpdate();
+    // Switches every '.tr' string app-wide and rebuilds GetMaterialApp.
+    Get.updateLocale(Locale(newCode));
   }
 }

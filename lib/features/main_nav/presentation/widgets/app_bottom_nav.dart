@@ -20,12 +20,11 @@ class AppBottomNav extends GetView<MainNavController> {
       child: Obx(
         () => Row(
           children: [
-            _item(c, 0, Icons.home_outlined, Icons.home, 'Home'),
-            _item(c, 1, Icons.warning_amber_outlined, Icons.warning_amber,
-                'Hazard'),
+            _item(c, 0, Icons.home_outlined, Icons.home, 'nav_home'),
+            _item(c, 1, Icons.warning_amber_outlined, Icons.warning_amber, 'nav_hazard'),
             SizedBox(width: 72.w), // notch space for Emergency FAB
-            _item(c, 2, Icons.grid_view_outlined, Icons.grid_view, 'Services'),
-            _item(c, 3, Icons.settings_outlined, Icons.settings, 'Settings'),
+            _item(c, 2, Icons.grid_view_outlined, Icons.grid_view, 'nav_services'),
+            _item(c, 3, Icons.settings_outlined, Icons.settings, 'nav_settings'),
           ],
         ),
       ),
@@ -33,7 +32,7 @@ class AppBottomNav extends GetView<MainNavController> {
   }
 
   Widget _item(AppThemeColors c, int index, IconData icon, IconData activeIcon,
-      String label) {
+      String labelKey) {
     final selected = controller.currentIndex.value == index;
     return Expanded(
       child: InkWell(
@@ -45,7 +44,7 @@ class AppBottomNav extends GetView<MainNavController> {
                 size: 24.sp,
                 color: selected ? c.primary : c.textSecondary),
             SizedBox(height: 2.h),
-            Text(label,
+            Text(labelKey.tr,
                 style: TextStyle(
                     fontSize: 10.sp,
                     fontWeight:

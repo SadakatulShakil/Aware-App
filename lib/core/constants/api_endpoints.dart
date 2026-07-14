@@ -14,4 +14,5 @@ class ApiEndpoints {
   static const bmdBaseUrl = 'https://usf.bmd.gov.bd/api/app';
   static const bmdForecast = '$bmdBaseUrl/weather/forecast';
   static const bmdLiveWeather = '$bmdBaseUrl/weather/liveweather';
+  static const bmdNotificationList = '$bmdBaseUrl/notification/list';
 }

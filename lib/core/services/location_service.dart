@@ -110,11 +110,9 @@ class LocationService {
 
   /// Returns true if permission was granted after the request.
   Future<bool> requestPermissionWithRationale() async {
-    final isBangla = Get.find<UserPrefService>().isBangla;
-
     final serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
-      await _showServiceDisabledDialog(isBangla);
+      await _showServiceDisabledDialog();
       return false;
     }
 
@@ -126,12 +124,12 @@ class LocationService {
     }
 
     if (permission == LocationPermission.deniedForever) {
-      await _showPermanentlyDeniedDialog(isBangla);
+      await _showPermanentlyDeniedDialog();
       return false;
     }
 
     if (permission == LocationPermission.denied) {
-      final shouldRequest = await _showRationaleDialog(isBangla);
+      final shouldRequest = await _showRationaleDialog();
       if (shouldRequest != true) return false;
 
       permission = await Geolocator.requestPermission();
@@ -140,7 +138,7 @@ class LocationService {
         return true;
       }
       if (permission == LocationPermission.deniedForever) {
-        await _showPermanentlyDeniedDialog(isBangla);
+        await _showPermanentlyDeniedDialog();
       }
       return false;
     }
@@ -152,32 +150,30 @@ class LocationService {
     required VoidCallback onSettingsOpened,
     bool isSilent = false,
   }) async {
-    final isBangla = Get.find<UserPrefService>().isBangla;
-
     bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
-      if (!isSilent) await _showServiceDisabledDialog(isBangla);
+      if (!isSilent) await _showServiceDisabledDialog();
       return null;
     }
 
     LocationPermission permission = await Geolocator.checkPermission();
 
     if (permission == LocationPermission.deniedForever) {
-      if (!isSilent) await _showPermanentlyDeniedDialog(isBangla);
+      if (!isSilent) await _showPermanentlyDeniedDialog();
       return null;
     }
 
     if (permission == LocationPermission.denied) {
       if (isSilent) return null;
 
-      final shouldRequest = await _showRationaleDialog(isBangla);
+      final shouldRequest = await _showRationaleDialog();
       if (shouldRequest != true) return null;
 
       permission = await Geolocator.requestPermission();
       if (permission != LocationPermission.whileInUse &&
           permission != LocationPermission.always) {
         if (permission == LocationPermission.deniedForever) {
-          await _showPermanentlyDeniedDialog(isBangla);
+          await _showPermanentlyDeniedDialog();
         }
         return null;
       }
@@ -195,9 +191,9 @@ class LocationService {
     }
   }
 
-  // ── Dialogs (Bangla + English, ported verbatim from BMD) ──
+  // ── Dialogs (bn/en via .tr, ported verbatim from BMD) ──
 
-  Future<bool?> _showRationaleDialog(bool isBangla) async {
+  Future<bool?> _showRationaleDialog() async {
     return await Get.dialog<bool>(
       PopScope(
         canPop: false,
@@ -208,22 +204,20 @@ class LocationService {
               Icon(Icons.location_on, color: Colors.blue.shade700, size: 28),
               const SizedBox(width: 8),
               Text(
-                isBangla ? 'অবস্থান অনুমতি' : 'Location Permission',
+                'loc_permission_title'.tr,
                 style: AppFonts.style(fontWeight: FontWeight.bold),
               ),
             ],
           ),
           content: Text(
-            isBangla
-                ? 'আপনার সঠিক আবহাওয়ার তথ্য পেতে আমাদের আপনার বর্তমান অবস্থান জানা দরকার। অনুগ্রহ করে অবস্থান অনুমতি প্রদান করুন।'
-                : 'We need your location to show accurate local weather forecasts for your area. Please allow location access.',
+            'loc_permission_body'.tr,
             style: AppFonts.style(fontSize: 14, height: 1.5),
           ),
           actions: [
             TextButton(
               onPressed: () => Get.back(result: false),
               child: Text(
-                isBangla ? 'এখন না' : 'Not Now',
+                'not_now'.tr,
                 style: AppFonts.style(color: Colors.grey.shade600),
               ),
             ),
@@ -234,7 +228,7 @@ class LocationService {
               ),
               onPressed: () => Get.back(result: true),
               child: Text(
-                isBangla ? 'অনুমতি দিন' : 'Allow',
+                'allow'.tr,
                 style: AppFonts.style(color: Colors.white),
               ),
             ),
@@ -245,7 +239,7 @@ class LocationService {
     );
   }
 
-  Future<void> _showServiceDisabledDialog(bool isBangla) async {
+  Future<void> _showServiceDisabledDialog() async {
     await Get.dialog(
       PopScope(
         canPop: false,
@@ -256,22 +250,20 @@ class LocationService {
               Icon(Icons.location_off, color: Colors.orange.shade700, size: 28),
               const SizedBox(width: 8),
               Text(
-                isBangla ? 'লোকেশন বন্ধ' : 'Location Disabled',
+                'location_disabled_title'.tr,
                 style: AppFonts.style(fontWeight: FontWeight.bold),
               ),
             ],
           ),
           content: Text(
-            isBangla
-                ? 'আপনার ডিভাইসের লোকেশন সার্ভিস বন্ধ আছে। সঠিক আবহাওয়া দেখতে লোকেশন চালু করুন।'
-                : 'Your device location service is turned off. Please enable location to get accurate weather for your area.',
+            'location_disabled_body'.tr,
             style: AppFonts.style(fontSize: 14, height: 1.5),
           ),
           actions: [
             TextButton(
               onPressed: () => Get.back(),
               child: Text(
-                isBangla ? 'পরে করব' : 'Later',
+                'later'.tr,
                 style: AppFonts.style(color: Colors.grey.shade600),
               ),
             ),
@@ -285,7 +277,7 @@ class LocationService {
                 await Geolocator.openLocationSettings();
               },
               child: Text(
-                isBangla ? 'সেটিংস খুলুন' : 'Open Settings',
+                'open_settings'.tr,
                 style: AppFonts.style(color: Colors.white),
               ),
             ),
@@ -296,7 +288,7 @@ class LocationService {
     );
   }
 
-  Future<void> _showPermanentlyDeniedDialog(bool isBangla) async {
+  Future<void> _showPermanentlyDeniedDialog() async {
     await Get.dialog(
       PopScope(
         canPop: false,
@@ -307,22 +299,20 @@ class LocationService {
               Icon(Icons.location_disabled, color: Colors.red.shade700, size: 28),
               const SizedBox(width: 8),
               Text(
-                isBangla ? 'অনুমতি প্রত্যাখ্যাত' : 'Permission Denied',
+                'permission_denied_title'.tr,
                 style: AppFonts.style(fontWeight: FontWeight.bold),
               ),
             ],
           ),
           content: Text(
-            isBangla
-                ? 'লোকেশন অনুমতি স্থায়ীভাবে বন্ধ করা হয়েছে। সেটিংসে গিয়ে অবস্থান অনুমতি চালু করুন।'
-                : 'Location permission has been permanently denied. Please go to app settings and enable location permission.',
+            'permission_denied_body'.tr,
             style: AppFonts.style(fontSize: 14, height: 1.5),
           ),
           actions: [
             TextButton(
               onPressed: () => Get.back(),
               child: Text(
-                isBangla ? 'পরে করব' : 'Later',
+                'later'.tr,
                 style: AppFonts.style(color: Colors.grey.shade600),
               ),
             ),
@@ -336,7 +326,7 @@ class LocationService {
                 await Geolocator.openAppSettings();
               },
               child: Text(
-                isBangla ? 'অ্যাপ সেটিংস' : 'App Settings',
+                'app_settings'.tr,
                 style: AppFonts.style(color: Colors.white),
               ),
             ),

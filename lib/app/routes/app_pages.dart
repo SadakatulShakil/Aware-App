@@ -1,8 +1,10 @@
 import 'package:get/get.dart';
 
 import '../../features/emergency/presentation/pages/emergency_page.dart';
+import '../../features/home/presentation/pages/notification_page.dart';
 import '../../features/main_nav/presentation/bindings/main_nav_binding.dart';
 import '../../features/main_nav/presentation/pages/main_nav_page.dart';
+import '../../features/settings/presentation/pages/notification_settings_page.dart';
 import '../../features/splash/presentation/bindings/splash_binding.dart';
 import '../../features/splash/presentation/pages/splash_page.dart';
 import 'app_routes.dart';
@@ -24,6 +26,14 @@ class AppPages {
     GetPage(
       name: AppRoutes.emergency,
       page: () => const EmergencyPage(),
+    ),
+    GetPage(
+      name: AppRoutes.notificationSettings,
+      page: () => const NotificationSettingsPage(),
+    ),
+    GetPage(
+      name: AppRoutes.notifications,
+      page: () => const NotificationPage(),
     ),
   ];
 }

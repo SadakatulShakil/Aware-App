@@ -44,7 +44,6 @@ class _LocationSelectionPageState extends State<LocationSelectionPage> {
   }
 
   void _showExplainDialog() {
-    final isBangla = controller.userService.isBangla;
     Get.dialog(
       barrierDismissible: false,
       Dialog(
@@ -57,14 +56,12 @@ class _LocationSelectionPageState extends State<LocationSelectionPage> {
               Lottie.asset('assets/json/find_location.json'),
               const SizedBox(height: 12),
               Text(
-                isBangla ? 'লোকেশন পাওয়া যায়নি' : 'Location not found',
+                'location_not_found_title'.tr,
                 style: AppFonts.style(fontSize: 20, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 12),
               Text(
-                isBangla
-                    ? 'আপনার এলাকার আবহাওয়া দেখার জন্য দয়া করে তালিকা থেকে আপনার উপজেলা বা জেলাটি খুঁজে নিন।'
-                    : "To see your area's weather, please select your Upazila or District from the list.",
+                'location_not_found_body'.tr,
                 textAlign: TextAlign.center,
                 style: AppFonts.style(fontSize: 14),
               ),
@@ -77,8 +74,7 @@ class _LocationSelectionPageState extends State<LocationSelectionPage> {
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                   ),
                   onPressed: () => Get.back(),
-                  child: Text(isBangla ? 'ঠিক আছে' : 'OK',
-                      style: AppFonts.style(color: Colors.white)),
+                  child: Text('ok'.tr, style: AppFonts.style(color: Colors.white)),
                 ),
               ),
             ],
@@ -99,7 +95,8 @@ class _LocationSelectionPageState extends State<LocationSelectionPage> {
       ),
       child: Scaffold(
         backgroundColor: Colors.white,
-        body: Stack(
+        body: SizedBox.expand(
+          child: Stack(
           children: [
             Container(
               padding: EdgeInsets.fromLTRB(8.w, 50.h, 16.w, 16.h),
@@ -125,7 +122,7 @@ class _LocationSelectionPageState extends State<LocationSelectionPage> {
                   Padding(
                     padding: EdgeInsets.only(top: 8.h),
                     child: Text(
-                      isBangla ? 'লোকেশন নির্বাচন করুন' : 'Select Location',
+                      'select_location_title'.tr,
                       style: AppFonts.style(
                         fontWeight: FontWeight.w600,
                         fontSize: 18.sp,
@@ -172,9 +169,7 @@ class _LocationSelectionPageState extends State<LocationSelectionPage> {
                             onChanged: controller.search,
                             style: AppFonts.style(fontSize: 16, color: Colors.black87),
                             decoration: InputDecoration(
-                              hintText: isBangla
-                                  ? 'উপজেলা বা জেলা খুঁজুন...'
-                                  : 'Search upazila or district...',
+                              hintText: 'search_upazila_hint'.tr,
                               hintStyle: AppFonts.style(fontSize: 16, color: Colors.grey),
                               suffixIcon: const Icon(Icons.search),
                               contentPadding:
@@ -193,7 +188,7 @@ class _LocationSelectionPageState extends State<LocationSelectionPage> {
                             if (controller.filteredUpazilas.isEmpty) {
                               return Center(
                                 child: Text(
-                                  isBangla ? 'কোন ফলাফল পাওয়া যায়নি' : 'No results found',
+                                  'no_results_found'.tr,
                                   style: AppFonts.style(fontSize: 16, color: Colors.black54),
                                 ),
                               );
@@ -215,6 +210,7 @@ class _LocationSelectionPageState extends State<LocationSelectionPage> {
               ),
             ),
           ],
+        ),
         ),
       ),
     );

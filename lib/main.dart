@@ -6,6 +6,7 @@ import 'app/bindings/initial_binding.dart';
 import 'app/routes/app_pages.dart';
 import 'app/routes/app_routes.dart';
 import 'app/theme/app_theme.dart';
+import 'core/services/localization_string.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -30,6 +31,9 @@ class AwareApp extends StatelessWidget {
         theme: AppTheme.light(),
         darkTheme: AppTheme.dark(),
         themeMode: ThemeMode.system, // saved mode re-applied in Splash
+        translations: LocalizationString(),
+        locale: const Locale('bn'), // saved language re-applied in Splash
+        fallbackLocale: const Locale('bn'),
         initialBinding: InitialBinding(),
         initialRoute: AppRoutes.splash,
         getPages: AppPages.pages,

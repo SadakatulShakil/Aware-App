@@ -47,6 +47,11 @@ class UserPrefService {
   bool get isFirstLaunch => _prefs.getBool(_kIsFirstLaunch) ?? true;
   Future<void> setFirstLaunchDone() => _prefs.setBool(_kIsFirstLaunch, false);
 
+  // ---- Generic bool flags (used by NotificationPrefs etc - still routed
+  // through this single gateway, never a raw SharedPreferences instance) ----
+  bool? getBool(String key) => _prefs.getBool(key);
+  Future<void> setBool(String key, bool value) => _prefs.setBool(key, value);
+
   // ---- App language ----
   String get appLanguage => _prefs.getString(_kAppLanguage) ?? 'bn';
   bool get isBangla => appLanguage == 'bn';
