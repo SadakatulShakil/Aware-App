@@ -35,8 +35,9 @@ class SplashPage extends GetView<SplashController> {
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(24.r),
                 ),
-                child: Icon(Icons.shield_outlined,
-                    size: 56.sp, color: c.primary),
+                child: Center(
+                  child: Image.asset(AppConstants.logoPath, width: 64.w, height: 64.w),
+                )
               ),
               SizedBox(height: 20.h),
               Text(AppConstants.appName,

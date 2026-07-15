@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
@@ -22,12 +23,7 @@ class OngoingBulletinCarousel extends StatefulWidget {
 }
 
 class _OngoingBulletinCarouselState extends State<OngoingBulletinCarousel> {
-  // A PageView only ever animates toward the numeric page requested, so
-  // wrapping the index back to 0 with modulo made it visually rewind
-  // through every page instead of continuing forward. Fix: never wrap -
-  // keep an unbounded, ever-increasing page index and let the itemBuilder
-  // map it back into the list with modulo, so it always advances forward
-  // and cycles seamlessly.
+
   static const int _initialPage = 10000;
 
   late final PageController _pageController;
@@ -80,12 +76,16 @@ class _OngoingBulletinCarouselState extends State<OngoingBulletinCarousel> {
   }
 
   Future<void> _openLink(String link) async {
+    if (kDebugMode) {
+      print('Opening bulletin link: $link');
+    }
     if (link.isEmpty) return;
     final uri = Uri.tryParse(link);
     if (uri == null) return;
     try {
       if (await canLaunchUrl(uri)) {
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
+        final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
+        if (!ok) await launchUrl(uri, mode: LaunchMode.platformDefault);
       }
     } catch (e) {
       AppLogger.e('Failed to launch bulletin link: $link', e);
@@ -97,10 +97,6 @@ class _OngoingBulletinCarouselState extends State<OngoingBulletinCarousel> {
     final c = AppThemeColors.of(Theme.of(context).brightness == Brightness.dark);
     if (widget.bulletins.isEmpty) return const SizedBox.shrink();
 
-    // A single item has no neighbors to page between - building a PageView
-    // (even with itemCount 1) still peeks the same card on both edges via
-    // the 0.94 viewportFraction and lets the user swipe pointlessly. Render
-    // it as a plain centered card instead, matching the same visual width.
     if (widget.bulletins.length == 1) {
       final bulletin = widget.bulletins.first;
       return SizedBox(

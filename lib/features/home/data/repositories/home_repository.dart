@@ -5,8 +5,8 @@ import '../models/notification_response_model.dart';
 import '../models/ongoing_bulletin_model.dart';
 
 /// Notifications are sourced from BMD's notification/list API (ported 1:1)
-/// and mapped into AWARE's NotificationModel, which feeds the home
-/// NotificationCarousel.
+/// and mapped into AWARE's NotificationModel, which feeds the header
+/// HeaderNotificationCarousel.
 class HomeRepository {
   final ApiClient _api;
 

@@ -14,4 +14,7 @@ class AppConstants {
     {'title': 'Medical Emergency', 'titleBn': 'স্বাস্থ্য বাতায়ন', 'number': '16263'},
     {'title': 'DDM Office', 'titleBn': 'ডিডিএম অফিস', 'number': '+8809611677777'},
   ];
+
+
+  static const logoPath = 'assets/images/ddm_logo.png';
 }

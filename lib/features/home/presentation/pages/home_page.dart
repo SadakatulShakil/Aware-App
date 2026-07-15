@@ -11,7 +11,7 @@ import '../../../../core/utils/convert_utils.dart';
 import '../../../../shared/widgets/bilingual_label.dart';
 import '../controllers/home_controller.dart';
 import '../widgets/hazard_grid.dart';
-import '../widgets/notification_carousel.dart';
+import '../widgets/header_notification_carousel.dart';
 import '../widgets/ongoing_bulletin_carousel.dart';
 import '../widgets/weather/base_weather_card.dart';
 import '../widgets/weather/weather_video_background.dart';
@@ -26,10 +26,6 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   final HomeController controller = Get.find<HomeController>();
 
-  /// True only when the live video has real frames on screen. The header
-  /// scrim switches on THIS - never on URL arrival - otherwise the
-  /// lighter video-scrim shows over the bright day image for ~400ms
-  /// while the video initializes (visible brightness pulse).
   final RxBool _videoReady = false.obs;
 
   @override
@@ -98,6 +94,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                       statusBarHeight: statusBarHeight,
                       background: _buildHeaderBackground(isNight),
                       colors: colors,
+                      hasCarousel: controller.notifications.isNotEmpty,
                       pinnedRowBuilder: (t) => _buildPinnedRow(t, colors),
                       fullContentBuilder: () => _buildFullHeaderContent(colors),
                     ),
@@ -112,21 +109,6 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                     ),
                     sliver: SliverList(
                       delegate: SliverChildListDelegate([
-                        Obx(() {
-                          if (controller.notifications.isEmpty) {
-                            return const SizedBox.shrink();
-                          }
-                          return Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              _sectionTitle(colors, 'বিজ্ঞপ্তি', 'Notifications'),
-                              SizedBox(height: 10.h),
-                              NotificationCarousel(
-                                  notifications: controller.notifications.toList()),
-                              SizedBox(height: 20.h),
-                            ],
-                          );
-                        }),
                         Obx(() {
                           if (controller.ongoingBulletins.isEmpty) {
                             return const SizedBox.shrink();
@@ -289,43 +271,57 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   }
 
   Widget _buildFullHeaderContent(AppThemeColors colors) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Obx(() {
+          if (controller.isLocationSwitching.value) {
+            return _buildLocationSwitchingLoader();
+          }
+          if (controller.forecast.value != null) {
+            if (controller.isLiveWeatherLoading.value) {
+              return Stack(
+                children: [
+                  _buildWeatherCard(),
+                  Positioned(
+                    top: 8.h,
+                    right: 8.w,
+                    child: SizedBox(
+                      width: 30.r,
+                      height: 30.r,
+                      child: lottie.Lottie.asset('assets/json/loading_anim.json', repeat: true),
+                    ),
+                  ),
+                ],
+              );
+            }
+            return _buildWeatherCard();
+          }
+          // No forecast yet. Only show the "No Data" / retry card once we've
+          // genuinely tried and failed - otherwise it flashes on every cold
+          // start for the split second before the first fetch/GPS resolve
+          // completes. isLocationUpdating covers the banner-triggered GPS+
+          // forecast fetch (_fetchGPSAndUpdateWeather), which isSyncingLocation
+          // does not - without it the no-data card could flash while that
+          // fetch is still in flight.
+          final stillResolving = controller.isForecastLoading.value ||
+              controller.isLocationUpdating.value ||
+              (controller.lat.value.isEmpty && controller.isSyncingLocation.value);
+          if (stillResolving) {
+            return _buildHeaderLoading(controller.lat.value.isEmpty);
+          }
+          return _buildNoDataCard();
+        }),
+        _buildCarouselAlert(),
+      ],
+    );
+  }
+
+  Widget _buildCarouselAlert() {
     return Obx(() {
-      if (controller.isLocationSwitching.value) {
-        return _buildLocationSwitchingLoader();
-      }
-      if (controller.forecast.value != null) {
-        if (controller.isLiveWeatherLoading.value) {
-          return Stack(
-            children: [
-              _buildWeatherCard(),
-              Positioned(
-                top: 8.h,
-                right: 8.w,
-                child: SizedBox(
-                  width: 30.r,
-                  height: 30.r,
-                  child: lottie.Lottie.asset('assets/json/loading_anim.json', repeat: true),
-                ),
-              ),
-            ],
-          );
-        }
-        return _buildWeatherCard();
-      }
-      // No forecast yet. Only show the "No Data" / retry card once we've
-      // genuinely tried and failed - otherwise it flashes on every cold
-      // start for the split second before the first fetch/GPS resolve
-      // completes. isLocationUpdating covers the banner-triggered GPS+
-      // forecast fetch (_fetchGPSAndUpdateWeather), which isSyncingLocation
-      // does not - without it the no-data card could flash while that
-      // fetch is still in flight.
-      final stillResolving = controller.isForecastLoading.value ||
-          controller.isLocationUpdating.value ||
-          (controller.lat.value.isEmpty && controller.isSyncingLocation.value);
-      if (stillResolving) {
-        return _buildHeaderLoading(controller.lat.value.isEmpty);
-      }
-      return _buildNoDataCard();
+      final notifications = controller.notifications;
+      if (notifications.isEmpty) return const SizedBox.shrink();
+      return HeaderNotificationCarousel(notifications: notifications.toList());
     });
   }
 
@@ -479,10 +475,6 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     );
   }
 
-  // Compact by design: this renders inside the header's full-content area
-  // (~159.h available below the pinned row at 390x844) and the Stack that
-  // hosts it clips hard - anything taller than that pushes the retry
-  // button out of the clip and it silently disappears.
   Widget _buildNoDataCard() {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
@@ -557,6 +549,7 @@ class _WeatherHeaderDelegate extends SliverPersistentHeaderDelegate {
   final AppThemeColors colors;
   final Widget Function(double t) pinnedRowBuilder;
   final Widget Function() fullContentBuilder;
+  final bool hasCarousel;
 
   _WeatherHeaderDelegate({
     required this.statusBarHeight,
@@ -564,10 +557,14 @@ class _WeatherHeaderDelegate extends SliverPersistentHeaderDelegate {
     required this.colors,
     required this.pinnedRowBuilder,
     required this.fullContentBuilder,
+    required this.hasCarousel,
   });
 
   @override
-  double get maxExtent => 215.h + statusBarHeight;
+  double get maxExtent {
+    final carouselHeight = hasCarousel ? 56.h : 0.h;
+    return 215.h + carouselHeight + statusBarHeight;
+  }
 
   @override
   double get minExtent => 56.h + statusBarHeight;
@@ -649,6 +646,7 @@ class _WeatherHeaderDelegate extends SliverPersistentHeaderDelegate {
   bool shouldRebuild(covariant _WeatherHeaderDelegate oldDelegate) {
     return statusBarHeight != oldDelegate.statusBarHeight ||
         background != oldDelegate.background ||
-        colors != oldDelegate.colors;
+        colors != oldDelegate.colors ||
+        hasCarousel != oldDelegate.hasCarousel;
   }
 }

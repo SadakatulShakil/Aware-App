@@ -14,6 +14,11 @@
             <action android:name="android.intent.action.PROCESS_TEXT"/>
             <data android:mimeType="text/plain"/>
         </intent>
+        <!-- Needed on Android 11+ so flutter can launch external urls. -->
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="https" />
+        </intent>
         <!-- Needed on Android 11+ so flutter_tts can see the installed TTS
              engine(s) - without this, package visibility silently breaks
              notification-page speech. -->
