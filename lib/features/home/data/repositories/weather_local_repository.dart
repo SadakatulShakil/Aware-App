@@ -16,7 +16,15 @@ class WeatherLocalRepository {
 
   WeatherLocalRepository(this._db);
 
-  String _key(String lat, String lon) => 'forecast_${lat}_$lon';
+  // Rounded to ~1.1km cells (forecast is upazila-resolution anyway) so GPS
+  // jitter between fixes - toStringAsFixed(5) is ~1m precision and differs
+  // on every fix - doesn't invalidate the cache. Full precision still goes
+  // to the API; only the cache key is normalized.
+  String _key(String lat, String lon) {
+    final latKey = double.tryParse(lat)?.toStringAsFixed(2) ?? lat;
+    final lonKey = double.tryParse(lon)?.toStringAsFixed(2) ?? lon;
+    return 'forecast_${latKey}_$lonKey';
+  }
 
   Future<WeatherForecastModel?> getCachedForecast(String lat, String lon) async {
     final db = _db;
@@ -28,6 +36,23 @@ class WeatherLocalRepository {
           jsonDecode(row.jsonData) as Map<String, dynamic>);
     } catch (e) {
       AppLogger.w('Forecast cache read failed: $e');
+      return null;
+    }
+  }
+
+  /// Last-known forecast under ANY cached coords - fallback for when GPS
+  /// jitter (or a genuinely new location) misses the exact-key lookup, so
+  /// the no-data card only ever appears on a true first install.
+  Future<WeatherForecastModel?> getLatestCachedForecast() async {
+    final db = _db;
+    if (db == null) return null;
+    try {
+      final row = await db.cacheDao.getLatestForecastCache();
+      if (row == null) return null;
+      return WeatherForecastModel.fromJson(
+          jsonDecode(row.jsonData) as Map<String, dynamic>);
+    } catch (e) {
+      AppLogger.w('Latest forecast cache fallback read failed: $e');
       return null;
     }
   }

@@ -39,10 +39,30 @@ class _OngoingBulletinCarouselState extends State<OngoingBulletinCarousel> {
     super.initState();
     _pageController =
         PageController(viewportFraction: 0.94, initialPage: _initialPage);
-    _startAutoScroll();
+    _maybeStartAutoScroll();
   }
 
-  void _startAutoScroll() {
+  @override
+  void didUpdateWidget(covariant OngoingBulletinCarousel oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Item count can change between builds (e.g. cache had 1, API returned
+    // 3) - re-evaluate whether the timer/PageView should be running.
+    if (widget.bulletins.length != oldWidget.bulletins.length) {
+      _maybeStartAutoScroll();
+    }
+  }
+
+  // With exactly 1 item there is nothing to cycle to, so no timer is
+  // created at all (previously it ticked every 4s doing nothing).
+  void _maybeStartAutoScroll() {
+    if (widget.bulletins.length < 2) {
+      _timer?.cancel();
+      _timer = null;
+      return;
+    }
+    if (_timer != null) return; // already running
+    _current = _initialPage;
+    if (_pageController.hasClients) _pageController.jumpToPage(_initialPage);
     _timer = Timer.periodic(const Duration(seconds: 4), (_) {
       if (!mounted || widget.bulletins.length < 2) return;
       _current++;
@@ -76,6 +96,26 @@ class _OngoingBulletinCarouselState extends State<OngoingBulletinCarousel> {
   Widget build(BuildContext context) {
     final c = AppThemeColors.of(Theme.of(context).brightness == Brightness.dark);
     if (widget.bulletins.isEmpty) return const SizedBox.shrink();
+
+    // A single item has no neighbors to page between - building a PageView
+    // (even with itemCount 1) still peeks the same card on both edges via
+    // the 0.94 viewportFraction and lets the user swipe pointlessly. Render
+    // it as a plain centered card instead, matching the same visual width.
+    if (widget.bulletins.length == 1) {
+      final bulletin = widget.bulletins.first;
+      return SizedBox(
+        height: 116.h,
+        child: Center(
+          child: FractionallySizedBox(
+            widthFactor: 0.94,
+            child: _BulletinCard(
+              bulletin: bulletin,
+              onTap: () => _openLink(bulletin.link),
+            ),
+          ),
+        ),
+      );
+    }
 
     final activeDot = _current % widget.bulletins.length;
 

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 
@@ -25,18 +27,31 @@ class LanguageService extends GetxService {
     code.value = newCode;
     await _prefs.setAppLanguage(newCode);
 
+    // Flip every '.tr' string and rebuild GetMaterialApp FIRST - this is
+    // the part the user is actually waiting on, so it must never be
+    // queued behind network calls. Data refresh below is fire-and-forget;
+    // language-dependent text (forecast, notifications) updates a moment
+    // later as those responses land, same as BMD.
+    Get.updateLocale(Locale(newCode));
+
+    unawaited(_refreshLanguageDependentData());
+  }
+
+  Future<void> _refreshLanguageDependentData() async {
     // Video is language-independent - only the cached type text is stale.
     await _prefs.clearLiveWeatherTypeCache();
 
-    if (Get.isRegistered<HomeController>()) {
-      final home = Get.find<HomeController>();
-      if (home.lat.value.isNotEmpty) {
-        await home.getForecast(home.lat.value, home.lon.value);
-        await home.fetchLiveWeather(home.lat.value, home.lon.value);
-      }
-    }
+    if (!Get.isRegistered<HomeController>()) return;
+    final home = Get.find<HomeController>();
 
-    // Switches every '.tr' string app-wide and rebuilds GetMaterialApp.
-    Get.updateLocale(Locale(newCode));
+    final refreshes = <Future<void>>[
+      home.fetchNotifications(),
+      home.fetchOngoingBulletins(),
+    ];
+    if (home.lat.value.isNotEmpty) {
+      refreshes.add(home.getForecast(home.lat.value, home.lon.value));
+      refreshes.add(home.fetchLiveWeather(home.lat.value, home.lon.value));
+    }
+    await Future.wait(refreshes);
   }
 }

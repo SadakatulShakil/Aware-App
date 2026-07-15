@@ -203,6 +203,16 @@ class _$CacheDao extends CacheDao {
   }
 
   @override
+  Future<CacheEntity?> getLatestForecastCache() async {
+    return _queryAdapter.query(
+        "SELECT * FROM cache WHERE `key` LIKE 'forecast_%' ORDER BY timestamp DESC LIMIT 1",
+        mapper: (Map<String, Object?> row) => CacheEntity(
+            key: row['key'] as String,
+            jsonData: row['jsonData'] as String,
+            timestamp: row['timestamp'] as int));
+  }
+
+  @override
   Future<void> upsert(CacheEntity entity) async {
     await _cacheEntityInsertionAdapter.insert(
         entity, OnConflictStrategy.replace);

@@ -1,5 +1,6 @@
 import '../../../../core/constants/api_endpoints.dart';
 import '../../../../core/network/api_client.dart';
+import '../../../../core/utils/app_logger.dart';
 import '../models/forecast_model.dart';
 import '../models/live_weather_model.dart';
 
@@ -15,14 +16,17 @@ class WeatherRepository {
     required String lon,
     required String lang,
   }) async {
+    final query = {'type': 'point', 'lat': lat, 'lon': lon};
+    final uri = Uri.parse(ApiEndpoints.bmdForecast).replace(queryParameters: query);
     try {
       final json = await _api.get(
         ApiEndpoints.bmdForecast,
-        query: {'type': 'point', 'lat': lat, 'lon': lon},
+        query: query,
         headers: {'Accept-Language': lang},
       );
       return WeatherForecastModel.fromJson(json);
-    } catch (_) {
+    } catch (e) {
+      AppLogger.w('WeatherRepository.getForecast failed: $uri (Accept-Language=$lang) -> $e');
       return null;
     }
   }

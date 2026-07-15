@@ -137,12 +137,26 @@ class HomeController extends GetxController {
     }
     savedLocations.assignAll(savedLocs);
 
+    AppLogger.d('getSharedPrefDataFromCache: trying exact cache key for lat=${lat.value} lon=${lon.value}');
     final cached = await _localRepo.getCachedForecast(lat.value, lon.value);
     if (cached != null) {
+      AppLogger.d('getSharedPrefDataFromCache: exact cache HIT');
       forecast.value = cached;
       currentLocationName.value = cached.result?.location?.locationName ?? '';
       isForecastFetched.value = true;
       hasCachedOrLiveData.value = true;
+    } else {
+      AppLogger.d('getSharedPrefDataFromCache: exact cache MISS, trying latest-forecast fallback');
+      final latest = await _localRepo.getLatestCachedForecast();
+      if (latest != null) {
+        AppLogger.d('getSharedPrefDataFromCache: fallback used - applied latest cached forecast');
+        forecast.value = latest;
+        currentLocationName.value = latest.result?.location?.locationName ?? '';
+        isForecastFetched.value = true;
+        hasCachedOrLiveData.value = true;
+      } else {
+        AppLogger.d('getSharedPrefDataFromCache: no cache at all (true cold start)');
+      }
     }
 
     // Cached live weather - starts video instantly without waiting
@@ -205,11 +219,24 @@ class HomeController extends GetxController {
       // switch (loader covers the card) - never re-apply a possibly-older
       // cache snapshot over already-displayed fresh data on pull-to-refresh.
       final shouldApplyCache = forecast.value == null || isLocationSwitching.value;
-      if (cachedData != null && shouldApplyCache) {
-        forecast.value = cachedData;
-        currentLocationName.value =
-            cachedData.result?.location?.locationName ?? currentLocationName.value;
-        isForecastFetched.value = true;
+      if (shouldApplyCache) {
+        if (cachedData != null) {
+          AppLogger.d('getForecast: exact cache HIT for lat=$lat lon=$lon');
+          forecast.value = cachedData;
+          currentLocationName.value =
+              cachedData.result?.location?.locationName ?? currentLocationName.value;
+          isForecastFetched.value = true;
+        } else {
+          AppLogger.d('getForecast: exact cache MISS for lat=$lat lon=$lon, trying latest-forecast fallback');
+          final latest = await _localRepo.getLatestCachedForecast();
+          if (latest != null) {
+            AppLogger.d('getForecast: fallback used - applied latest cached forecast');
+            forecast.value = latest;
+            currentLocationName.value =
+                latest.result?.location?.locationName ?? currentLocationName.value;
+            isForecastFetched.value = true;
+          }
+        }
       }
 
       final result = await _weatherRepo.getForecast(
@@ -217,6 +244,8 @@ class HomeController extends GetxController {
         lon: lon,
         lang: userService.appLanguage,
       );
+      AppLogger.d(
+          'getForecast: fetch for lat=$lat lon=$lon -> ${result != null ? 'success' : 'failed/null (see WeatherRepository log for reason)'}');
 
       if (result != null) {
         forecast.value = result;
@@ -225,7 +254,9 @@ class HomeController extends GetxController {
         isForecastFetched.value = true;
         hasCachedOrLiveData.value = true;
         await _localRepo.cacheForecast(lat, lon, result);
-      } else if (cachedData == null) {
+      } else if (forecast.value == null) {
+        // Truly nothing to show - no exact cache, no fallback, no live
+        // result. This is the only case the no-data card should ever mean.
         isForecastFetched.value = false;
       }
     } catch (e) {

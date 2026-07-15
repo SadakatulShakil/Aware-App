@@ -238,25 +238,34 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      ConstrainedBox(
-                        constraints: BoxConstraints(maxWidth: 220.w),
-                        child: Obx(() => Text(
-                              controller.currentLocationName.value,
-                              overflow: TextOverflow.ellipsis,
-                              style: AppFonts.style(
-                                  fontSize: fontSize, color: titleColor, fontWeight: FontWeight.w600),
-                            )),
-                      ),
-                      Icon(Icons.keyboard_arrow_down, color: titleColor, size: 20.r),
-                    ],
-                  ),
+                  Obx(() {
+                    final name = controller.currentLocationName.value;
+                    if (name.isEmpty) return const SizedBox.shrink();
+                    return Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        ConstrainedBox(
+                          constraints: BoxConstraints(maxWidth: 220.w),
+                          child: Text(
+                            name,
+                            overflow: TextOverflow.ellipsis,
+                            style: AppFonts.style(
+                                fontSize: fontSize, color: titleColor, fontWeight: FontWeight.w600),
+                          ),
+                        ),
+                        Icon(Icons.keyboard_arrow_down, color: titleColor, size: 20.r),
+                      ],
+                    );
+                  }),
                   Obx(() {
                     final current = controller.forecast.value?.result?.current;
+                    final weekday = current?.weekday ?? '';
+                    final date = current?.date ?? '';
+                    // Same "empty comma" problem as the name row above -
+                    // don't show ", " before there's actually a date.
+                    if (weekday.isEmpty && date.isEmpty) return const SizedBox.shrink();
                     return Text(
-                      "${current?.weekday ?? ''}, ${current?.date ?? ''}",
+                      "$weekday, $date",
                       style: AppFonts.style(fontSize: 11.sp, color: subtitleColor),
                     );
                   }),
@@ -306,8 +315,12 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
       // No forecast yet. Only show the "No Data" / retry card once we've
       // genuinely tried and failed - otherwise it flashes on every cold
       // start for the split second before the first fetch/GPS resolve
-      // completes.
+      // completes. isLocationUpdating covers the banner-triggered GPS+
+      // forecast fetch (_fetchGPSAndUpdateWeather), which isSyncingLocation
+      // does not - without it the no-data card could flash while that
+      // fetch is still in flight.
       final stillResolving = controller.isForecastLoading.value ||
+          controller.isLocationUpdating.value ||
           (controller.lat.value.isEmpty && controller.isSyncingLocation.value);
       if (stillResolving) {
         return _buildHeaderLoading(controller.lat.value.isEmpty);
@@ -466,37 +479,49 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     );
   }
 
+  // Compact by design: this renders inside the header's full-content area
+  // (~159.h available below the pinned row at 390x844) and the Stack that
+  // hosts it clips hard - anything taller than that pushes the retry
+  // button out of the clip and it silently disappears.
   Widget _buildNoDataCard() {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 30.h),
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
       width: double.infinity,
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.cloud_off_rounded, color: Colors.white70, size: 50.r),
-          SizedBox(height: 12.h),
+          Icon(Icons.cloud_off_rounded, color: Colors.white70, size: 32.r),
+          SizedBox(height: 8.h),
           Text(
             'no_data_available'.tr,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style:
-                AppFonts.style(fontWeight: FontWeight.bold, fontSize: 20.sp, color: Colors.white),
+                AppFonts.style(fontWeight: FontWeight.bold, fontSize: 15.sp, color: Colors.white),
           ),
+          SizedBox(height: 4.h),
           Text(
             'check_internet_connection'.tr,
-            style: AppFonts.style(fontSize: 14.sp, color: Colors.white70),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: AppFonts.style(fontSize: 11.sp, color: Colors.white70),
             textAlign: TextAlign.center,
           ),
-          SizedBox(height: 15.h),
+          SizedBox(height: 8.h),
           ElevatedButton(
             onPressed: controller.retryLoadingData,
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.white.withOpacity(0.92),
               foregroundColor: Colors.black87,
               elevation: 0,
-              padding: EdgeInsets.symmetric(horizontal: 28.w, vertical: 12.h),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.r)),
+              minimumSize: Size(0, 32.h),
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              padding: EdgeInsets.symmetric(horizontal: 22.w, vertical: 6.h),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
             ),
             child: Text('retry'.tr,
-                style: AppFonts.style(fontWeight: FontWeight.w700, fontSize: 14.sp)),
+                style: AppFonts.style(fontWeight: FontWeight.w700, fontSize: 13.sp)),
           ),
         ],
       ),
