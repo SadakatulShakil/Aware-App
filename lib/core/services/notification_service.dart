@@ -32,27 +32,50 @@ class NotificationService {
   final FlutterLocalNotificationsPlugin _local =
       FlutterLocalNotificationsPlugin();
 
-  static const AndroidNotificationChannel _alertChannel =
-      AndroidNotificationChannel(
-    'aware_alerts',
-    'Disaster Alerts',
-    description: 'Weather & disaster alerts from DDM',
-    importance: Importance.max,
-    playSound: true,
-    enableVibration: true,
-  );
+  static const _alertChannelId = 'aware_alerts';
+  static const _alertChannelName = 'Disaster Alerts';
+  static const _alertChannelDescription = 'Weather & disaster alerts from DDM';
 
-  static const AndroidNotificationChannel _generalChannel =
-      AndroidNotificationChannel(
-    'aware_general',
-    'General Notifications',
-    description: 'Weather updates and general information',
-    importance: Importance.high,
-    playSound: true,
-    enableVibration: false,
-  );
+  static const _generalChannelId = 'aware_general';
+  static const _generalChannelName = 'General Notifications';
+  static const _generalChannelDescription =
+      'Weather updates and general information';
 
   final NotificationPrefs _prefs = NotificationPrefs();
+
+  /// `'default'` means no custom sound (system default ringtone).
+  AndroidNotificationSound? _soundFor(String ringtone) =>
+      ringtone == 'default' ? null : RawResourceAndroidNotificationSound(ringtone);
+
+  /// Android 8+ locks a channel's sound/vibration/audio-attributes at
+  /// creation time, so these are rebuilt from the live prefs whenever the
+  /// channel is (re)created.
+  AndroidNotificationChannel _buildAlertChannel() => AndroidNotificationChannel(
+        _alertChannelId,
+        _alertChannelName,
+        description: _alertChannelDescription,
+        importance: Importance.max,
+        playSound: true,
+        sound: _soundFor(_prefs.alertRingtone),
+        enableVibration: true,
+        // Alarm stream bypasses silent/DND when emergency bypass is on.
+        audioAttributesUsage: _prefs.emergencyBypass
+            ? AudioAttributesUsage.alarm
+            : AudioAttributesUsage.notification,
+        showBadge: true,
+      );
+
+  AndroidNotificationChannel _buildGeneralChannel() =>
+      AndroidNotificationChannel(
+        _generalChannelId,
+        _generalChannelName,
+        description: _generalChannelDescription,
+        importance: Importance.high,
+        playSound: true,
+        sound: _soundFor(_prefs.generalRingtone),
+        enableVibration: _prefs.generalVibration,
+        showBadge: true,
+      );
 
   /// Stores the FCM message from a terminated-state tap. Consumed by
   /// handlePendingFcmNavigation(), called from HomeController.onReady().
@@ -70,17 +93,8 @@ class NotificationService {
 
       final androidImpl = _local.resolvePlatformSpecificImplementation<
           AndroidFlutterLocalNotificationsPlugin>();
-      await androidImpl?.createNotificationChannel(_alertChannel);
-      await androidImpl?.createNotificationChannel(
-        AndroidNotificationChannel(
-          _generalChannel.id,
-          _generalChannel.name,
-          description: _generalChannel.description,
-          importance: _generalChannel.importance,
-          playSound: _generalChannel.playSound,
-          enableVibration: _prefs.generalVibration,
-        ),
-      );
+      await androidImpl?.createNotificationChannel(_buildAlertChannel());
+      await androidImpl?.createNotificationChannel(_buildGeneralChannel());
       // Android 13+ runtime notification permission
       await androidImpl?.requestNotificationsPermission();
     } catch (e) {
@@ -161,23 +175,62 @@ class NotificationService {
     if (isAlert && !_prefs.alertsEnabled) return;
     if (!isAlert && !_prefs.generalEnabled) return;
 
-    final channel = isAlert ? _alertChannel : _generalChannel;
     await _local.show(
       DateTime.now().millisecondsSinceEpoch ~/ 1000,
       title,
       body,
-      NotificationDetails(
+      _detailsFor(isAlert),
+    );
+  }
+
+  NotificationDetails _detailsFor(bool isAlert) {
+    final sound =
+        _soundFor(isAlert ? _prefs.alertRingtone : _prefs.generalRingtone);
+
+    if (isAlert) {
+      return NotificationDetails(
         android: AndroidNotificationDetails(
-          channel.id,
-          channel.name,
-          channelDescription: channel.description,
-          importance: channel.importance,
-          priority: isAlert ? Priority.max : Priority.high,
+          _alertChannelId,
+          _alertChannelName,
+          channelDescription: _alertChannelDescription,
+          importance: Importance.max,
+          priority: Priority.max,
           icon: '@mipmap/ic_launcher',
-          enableVibration: isAlert ? true : _prefs.generalVibration,
+          playSound: true,
+          sound: sound,
+          enableVibration: true,
+          // Alarm stream + alarm category bypass silent/DND when the user
+          // has emergency bypass enabled.
+          audioAttributesUsage: _prefs.emergencyBypass
+              ? AudioAttributesUsage.alarm
+              : AudioAttributesUsage.notification,
+          category: AndroidNotificationCategory.alarm,
+          fullScreenIntent: _prefs.fullScreenAlert,
         ),
-        iOS: const DarwinNotificationDetails(),
+        iOS: DarwinNotificationDetails(
+          presentAlert: true,
+          presentBadge: true,
+          presentSound: true,
+          interruptionLevel: _prefs.emergencyBypass
+              ? InterruptionLevel.critical
+              : InterruptionLevel.active,
+        ),
+      );
+    }
+
+    return NotificationDetails(
+      android: AndroidNotificationDetails(
+        _generalChannelId,
+        _generalChannelName,
+        channelDescription: _generalChannelDescription,
+        importance: Importance.high,
+        priority: Priority.high,
+        icon: '@mipmap/ic_launcher',
+        playSound: true,
+        sound: sound,
+        enableVibration: _prefs.generalVibration,
       ),
+      iOS: const DarwinNotificationDetails(),
     );
   }
 
@@ -190,25 +243,30 @@ class NotificationService {
     );
   }
 
-  /// Android 8+ locks a channel's vibration setting at creation time - a
-  /// preference toggle only takes effect if the channel is recreated.
-  Future<void> updateGeneralChannelVibration(bool enabled) async {
+  /// Android 8+ locks a channel's sound/vibration/audio-attributes at
+  /// creation time - a preference change only takes effect once the
+  /// channel is deleted and recreated from the live prefs.
+  Future<void> updateAlertChannel() => _recreateChannel(
+        id: _alertChannelId,
+        build: _buildAlertChannel,
+      );
+
+  Future<void> updateGeneralChannel() => _recreateChannel(
+        id: _generalChannelId,
+        build: _buildGeneralChannel,
+      );
+
+  Future<void> _recreateChannel({
+    required String id,
+    required AndroidNotificationChannel Function() build,
+  }) async {
     final androidImpl = _local.resolvePlatformSpecificImplementation<
         AndroidFlutterLocalNotificationsPlugin>();
     try {
-      await androidImpl?.deleteNotificationChannel(_generalChannel.id);
-      await androidImpl?.createNotificationChannel(
-        AndroidNotificationChannel(
-          _generalChannel.id,
-          _generalChannel.name,
-          description: _generalChannel.description,
-          importance: _generalChannel.importance,
-          playSound: _generalChannel.playSound,
-          enableVibration: enabled,
-        ),
-      );
+      await androidImpl?.deleteNotificationChannel(id);
+      await androidImpl?.createNotificationChannel(build());
     } catch (e) {
-      AppLogger.w('updateGeneralChannelVibration failed: $e');
+      AppLogger.w('Recreating channel $id failed: $e');
     }
   }
 

@@ -40,17 +40,19 @@ class UserPrefService {
   }
 
   // ---- Theme ----
-  String get themeMode => _prefs.getString(_kThemeMode) ?? 'system';
+  String get themeMode => _prefs.getString(_kThemeMode) ?? 'dark';
   Future<void> setThemeMode(String mode) => _prefs.setString(_kThemeMode, mode);
 
   // ---- First launch ----
   bool get isFirstLaunch => _prefs.getBool(_kIsFirstLaunch) ?? true;
   Future<void> setFirstLaunchDone() => _prefs.setBool(_kIsFirstLaunch, false);
 
-  // ---- Generic bool flags (used by NotificationPrefs etc - still routed
-  // through this single gateway, never a raw SharedPreferences instance) ----
+  // ---- Generic bool/string flags (used by NotificationPrefs etc - still
+  // routed through this single gateway, never a raw SharedPreferences instance) ----
   bool? getBool(String key) => _prefs.getBool(key);
   Future<void> setBool(String key, bool value) => _prefs.setBool(key, value);
+  String? getString(String key) => _prefs.getString(key);
+  Future<void> setString(String key, String value) => _prefs.setString(key, value);
 
   // ---- App language ----
   String get appLanguage => _prefs.getString(_kAppLanguage) ?? 'bn';

@@ -4,6 +4,9 @@
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <!-- Needed on Android 14+ so alert notifications can show as a
+         full-screen intent on the lock screen. -->
+    <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT"/>
 
     <!-- Needed for tel: links (Emergency page) on Android 11+ -->
     <queries>
@@ -52,5 +55,12 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+
+        <!-- FCM: notification-only payloads (no data.type) with no explicit
+             channel fall back to the alert channel, so server-triggered
+             pushes still get the alarm-stream silent/DND bypass. -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="aware_alerts"/>
     </application>
 </manifest>

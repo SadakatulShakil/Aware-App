@@ -64,7 +64,7 @@ class SettingsPage extends StatelessWidget {
           SizedBox(height: 12.h),
           _sectionCard(c, 'থিম', 'Theme', [
             Obx(() => Column(
-                  children: ThemeMode.values
+                  children: [ThemeMode.dark, ThemeMode.light]
                       .map((mode) => RadioListTile<ThemeMode>(
                             dense: true,
                             contentPadding: EdgeInsets.zero,

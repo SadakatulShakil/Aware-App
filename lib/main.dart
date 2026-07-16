@@ -30,7 +30,7 @@ class AwareApp extends StatelessWidget {
         debugShowCheckedModeBanner: false,
         theme: AppTheme.light(),
         darkTheme: AppTheme.dark(),
-        themeMode: ThemeMode.system, // saved mode re-applied in Splash
+        themeMode: ThemeMode.dark, // saved mode re-applied in Splash
         translations: LocalizationString(),
         locale: const Locale('bn'), // saved language re-applied in Splash
         fallbackLocale: const Locale('bn'),

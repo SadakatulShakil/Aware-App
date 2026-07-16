@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import '../../../../app/routes/app_routes.dart';
 import '../../../../core/database/app_database.dart';
 import '../../../../core/services/language_service.dart';
+import '../../../../core/services/location_service.dart';
 import '../../../../core/services/notification_service.dart';
 import '../../../../core/services/theme_service.dart';
 import '../../../../core/services/user_pref_service.dart';
@@ -40,12 +41,23 @@ class SplashController extends GetxController {
     statusText.value = 'নোটিফিকেশন প্রস্তুত হচ্ছে...';
     await NotificationService.instance.init();
 
-    // Location/GPS is resolved by HomeController.onReady (BMD-style,
-    // after the app is already on screen) - splash must not block on it.
+    // 5. Location permission - only block on this when there is no saved
+    // location yet (first launch / fresh install). getLocation(isSilent:
+    // false) shows the rationale/system dialogs; HomeController's silent
+    // auto-sync (onReady) handles subsequent launches and falls back to
+    // the manual picker if the user ends up denying here.
+    if (prefs.lat == null || prefs.lat!.isEmpty) {
+      statusText.value = 'অবস্থান প্রস্তুত হচ্ছে...';
+      try {
+        await LocationService.instance.getLocation(onSettingsOpened: () {});
+      } catch (e) {
+        AppLogger.e('Splash location resolve failed', e);
+      }
+    }
 
     if (prefs.isFirstLaunch) await prefs.setFirstLaunchDone();
 
-    // 5. Enter the app
+    // 6. Enter the app
     Get.offAllNamed(AppRoutes.mainNav);
   }
 }
