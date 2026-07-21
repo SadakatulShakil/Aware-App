@@ -111,6 +111,10 @@ class LocalizationString extends Translations {
           'drawer_feedback': 'Feedback',
           'app_owner': 'Department of Disaster Management (DDM)',
           'aware_full_name': 'Advanced Warning & Analytics for Risk & Emergencies',
+
+          // Incident report page
+          'incident_report_page_title': 'Incident Reports',
+          'see_more': 'See more...',
         },
         'bn': {
           'loc_permission_title': 'অবস্থান অনুমতি',
@@ -212,6 +216,10 @@ class LocalizationString extends Translations {
           'drawer_feedback': 'মতামত',
           'app_owner': 'দুর্যোগ ব্যবস্থাপনা অধিদপ্তর (ডিডিএম)',
           'aware_full_name': 'Advanced Warning & Analytics for Risk & Emergencies',
+
+          // Incident report page
+          'incident_report_page_title': 'ঘটনা রিপোর্ট',
+          'see_more': 'আরও দেখুন...',
         },
       };
 }

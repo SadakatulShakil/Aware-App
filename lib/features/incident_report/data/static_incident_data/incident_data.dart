@@ -10,6 +10,10 @@ final List<IncidentDataModel> demoIncidents = [
     injuredCount: 5,
     description:
     'Heavy rainfall over the last 24 hours has caused flash flooding in low-lying '
+        'areas near the Surma river. Local authorities have opened emergency shelters.'
+        'Heavy rainfall over the last 24 hours has caused flash flooding in low-lying '
+        'areas near the Surma river. Local authorities have opened emergency shelters.'
+        'Heavy rainfall over the last 24 hours has caused flash flooding in low-lying '
         'areas near the Surma river. Local authorities have opened emergency shelters.',
   ),
   const IncidentDataModel(
@@ -20,6 +24,10 @@ final List<IncidentDataModel> demoIncidents = [
     injuredCount: 3,
     description:
     'Continuous rain has increased landslide risk in hilly areas. Residents in '
+        'vulnerable zones have been advised to relocate to safer ground temporarily.'
+        'Continuous rain has increased landslide risk in hilly areas. Residents in '
+        'vulnerable zones have been advised to relocate to safer ground temporarily.'
+        'Continuous rain has increased landslide risk in hilly areas. Residents in '
         'vulnerable zones have been advised to relocate to safer ground temporarily.',
   ),
   const IncidentDataModel(
@@ -30,6 +38,10 @@ final List<IncidentDataModel> demoIncidents = [
     injuredCount: 0,
     description:
     'Rapid riverbank erosion has affected several homesteads along the Brahmaputra. '
+        'Survey teams are assessing the extent of damage and relocation needs.'
+        'Rapid riverbank erosion has affected several homesteads along the Brahmaputra. '
+        'Survey teams are assessing the extent of damage and relocation needs.'
+        'Rapid riverbank erosion has affected several homesteads along the Brahmaputra. '
         'Survey teams are assessing the extent of damage and relocation needs.',
   ),
 ];

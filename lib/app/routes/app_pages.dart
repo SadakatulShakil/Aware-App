@@ -1,9 +1,11 @@
 import 'package:get/get.dart';
 
 import '../../features/drawer/presentation/pages/about_page.dart';
+import '../../features/incident_report/data/models/icident_data_model.dart';
 import '../../features/incident_report/pages/add_incident_report_page.dart';
 import '../../features/drawer/presentation/pages/contact_us_page.dart';
 import '../../features/drawer/presentation/pages/feedback_page.dart';
+import '../../features/incident_report/pages/incident_report_details_page.dart';
 import '../../features/incident_report/pages/incident_report_page.dart';
 import '../../features/drawer/presentation/pages/privacy_policy_page.dart';
 import '../../features/drawer/presentation/pages/risk_information_page.dart';
@@ -57,6 +59,12 @@ class AppPages {
     GetPage(
       name: AppRoutes.incidentReport,
       page: () => const IncidentReportPage(),
+    ),
+    GetPage(
+      name: AppRoutes.incidentReportDetails,
+      page: () => IncidentReportDetailsPage(
+        incident: Get.arguments as IncidentDataModel,
+      ),
     ),
     GetPage(
       name: AppRoutes.privacyPolicy,

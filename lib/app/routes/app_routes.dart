@@ -8,6 +8,7 @@ abstract class AppRoutes {
   static const about = '/about';
   static const riskInformation = '/risk-information';
   static const incidentReport = '/incident-report';
+  static const incidentReportDetails = '/incident-report-details';
   static const addIncidentReport = '/add_incident-report';
   static const privacyPolicy = '/privacy-policy';
   static const contactUs = '/contact-us';

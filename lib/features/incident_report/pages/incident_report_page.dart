@@ -2,6 +2,7 @@ import 'package:aware/app/routes/app_routes.dart';
 import 'package:aware/features/incident_report/data/models/icident_data_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:get/get.dart';
 
 import '../../../app/theme/app_text_styles.dart';
 import '../../../app/theme/app_theme_colors.dart';
@@ -60,94 +61,153 @@ class _IncidentCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: c.cardBg,
-        borderRadius: BorderRadius.circular(16.r),
-      ),
-      padding: EdgeInsets.all(14.w),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header: avatar + name + location
-          Row(
-            children: [
-              CircleAvatar(
-                radius: 22.r,
-                backgroundColor: c.primary.withOpacity(0.15),
-                child: Icon(Icons.person_outline_sharp, color: c.primary, size: 22.sp),
-              ),
-              SizedBox(width: 12.w),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(incident.userName, style: AppTextStyles.title(c.textPrimary)),
-                    Text(incident.name, style: AppTextStyles.caption(c.textPrimary)),
-                    //SizedBox(height: 2.h),
-                    Row(
-                      children: [
-                        //Icon(Icons.location_on_outlined, size: 14.sp, color: c.textSecondary),
-                        Expanded(
-                          child: Text(
-                            incident.location,
-                            style: AppTextStyles.body(c.textSecondary),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
+    return GestureDetector(
+      onTap: () {
+        Navigator.pushNamed(context, AppRoutes.incidentReportDetails, arguments: incident);
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          color: c.cardBg,
+          borderRadius: BorderRadius.circular(16.r),
+        ),
+        padding: EdgeInsets.all(14.w),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header: avatar + name + location
+            Row(
+              children: [
+                CircleAvatar(
+                  radius: 22.r,
+                  backgroundColor: c.primary.withOpacity(0.15),
+                  child: Icon(Icons.person_outline_sharp, color: c.primary, size: 22.sp),
                 ),
-              ),
-            ],
-          ),
-          SizedBox(height: 10.h),
-
-          // Death / Injured counts
-          Row(
-            children: [
-              _StatChip(
-                label: 'Death',
-                value: incident.deathCount,
-                color: Colors.red,
-              ),
-              SizedBox(width: 8.w),
-              _StatChip(
-                label: 'Injured',
-                value: incident.injuredCount,
-                color: Colors.orange,
-              ),
-            ],
-          ),
-          SizedBox(height: 12.h),
-
-          // Image placeholder — swap for Image.network(incident.imageUrl) later
-          ClipRRect(
-            borderRadius: BorderRadius.circular(12.r),
-            child: Container(
-              height: 140.h,
-              width: double.infinity,
-              color: c.scaffoldBg,
-              child: incident.imageUrl == null
-                  ? Center(
-                child: Icon(Icons.image_outlined, size: 36.sp, color: c.textSecondary),
-              )
-                  : Image.network(incident.imageUrl!, fit: BoxFit.cover),
+                SizedBox(width: 12.w),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(incident.userName, style: AppTextStyles.title(c.textPrimary)),
+                      Text(incident.name, style: AppTextStyles.caption(c.textPrimary)),
+                      //SizedBox(height: 2.h),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              incident.location,
+                              style: AppTextStyles.body(c.textSecondary),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
-          ),
-          SizedBox(height: 12.h),
+            SizedBox(height: 10.h),
 
-          // Description
-          Text('বিবরণ / Description', style: AppTextStyles.title(c.textPrimary)),
-          SizedBox(height: 4.h),
-          Text(
-            incident.description,
-            style: AppTextStyles.body(c.textSecondary),
-            maxLines: 4,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ],
+            // Death / Injured counts
+            Row(
+              children: [
+                _StatChip(
+                  label: 'Death',
+                  value: incident.deathCount,
+                  color: Colors.red,
+                ),
+                SizedBox(width: 8.w),
+                _StatChip(
+                  label: 'Injured',
+                  value: incident.injuredCount,
+                  color: Colors.orange,
+                ),
+              ],
+            ),
+            SizedBox(height: 12.h),
+
+            // Image placeholder — swap for Image.network(incident.imageUrl) later
+            ClipRRect(
+              borderRadius: BorderRadius.circular(12.r),
+              child: Container(
+                height: 140.h,
+                width: double.infinity,
+                color: c.scaffoldBg,
+                child: incident.imageUrl == null
+                    ? Center(
+                  child: Icon(Icons.image_outlined, size: 36.sp, color: c.textSecondary),
+                )
+                    : Image.network(incident.imageUrl!, fit: BoxFit.cover),
+              ),
+            ),
+            SizedBox(height: 12.h),
+
+            // Description
+            Text('বিবরণ / Description', style: AppTextStyles.title(c.textPrimary)),
+            SizedBox(height: 4.h),
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final bodyStyle = AppTextStyles.body(c.textSecondary);
+                const maxLines = 2;
+                final maxWidth = constraints.maxWidth;
+                final description = incident.description;
+
+                // Does the full text already fit in 2 lines? Show as-is, no "See more".
+                final fullPainter = TextPainter(
+                  text: TextSpan(text: description, style: bodyStyle),
+                  maxLines: maxLines,
+                  textDirection: TextDirection.ltr,
+                )..layout(maxWidth: maxWidth);
+
+                if (!fullPainter.didExceedMaxLines) {
+                  return Text(description, style: bodyStyle);
+                }
+
+                // Overflows — binary search the longest prefix that still fits
+                // once the "... See more" suffix is appended.
+                final seeMoreText = 'see_more'.tr;
+                final suffixSpan = TextSpan(
+                  text: '    $seeMoreText',
+                  style: bodyStyle.copyWith(color: Colors.blue, fontWeight: FontWeight.w600),
+                );
+
+                int low = 0;
+                int high = description.length;
+                String bestTruncated = '';
+
+                while (low <= high) {
+                  final mid = (low + high) ~/ 2;
+                  final candidate = description.substring(0, mid).trimRight();
+
+                  final testPainter = TextPainter(
+                    text: TextSpan(
+                      style: bodyStyle,
+                      children: [TextSpan(text: candidate), suffixSpan],
+                    ),
+                    maxLines: maxLines,
+                    textDirection: TextDirection.ltr,
+                  )..layout(maxWidth: maxWidth);
+
+                  if (testPainter.didExceedMaxLines) {
+                    high = mid - 1;
+                  } else {
+                    bestTruncated = candidate;
+                    low = mid + 1;
+                  }
+                }
+
+                return RichText(
+                  maxLines: maxLines,
+                  overflow: TextOverflow.clip,
+                  text: TextSpan(
+                    style: bodyStyle,
+                    children: [TextSpan(text: bestTruncated), suffixSpan],
+                  ),
+                );
+              },
+            ),
+          ],
+        ),
       ),
     );
   }
