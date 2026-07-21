@@ -3,13 +3,14 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 
+import '../../../../../app/routes/app_routes.dart';
 import '../../../../../app/theme/app_fonts.dart';
 import '../../../../../app/theme/app_theme_colors.dart';
 import '../../../../../core/utils/convert_utils.dart';
 
 /// Ported 1:1 from BMD's BaseWeatherCard - type tag, big temp, feels-like,
 /// HT/LT/rainfall overlay bar. BMD's survey feedback button is replaced
-/// with an "Incident Report" button (same position/style, no API yet).
+/// with an "Incident Report" button (same position/style).
 class BaseWeatherCard extends StatelessWidget {
   final String temp;
   final String tempMax;
@@ -133,11 +134,7 @@ class BaseWeatherCard extends StatelessWidget {
 
   Widget _buildIncidentReportButton(BuildContext context) {
     return GestureDetector(
-      onTap: () => Get.snackbar(
-        'incident_report'.tr,
-        'incident_report_coming_soon'.tr,
-        snackPosition: SnackPosition.BOTTOM,
-      ),
+      onTap: () => Get.toNamed(AppRoutes.incidentReport),
       child: Container(
         padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 6.h),
         decoration: BoxDecoration(

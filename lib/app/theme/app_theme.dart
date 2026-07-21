@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import 'app_theme_colors.dart';
 
@@ -24,6 +25,14 @@ class AppTheme {
         elevation: 0,
         centerTitle: true,
         foregroundColor: c.textPrimary,
+        // Without this, AppBar estimates icon brightness from its own
+        // (transparent) backgroundColor, which always reads as "dark" and
+        // forces light/white status bar icons - invisible in light mode.
+        systemOverlayStyle: SystemUiOverlayStyle(
+          statusBarColor: Colors.transparent,
+          statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
+          statusBarBrightness: isDark ? Brightness.dark : Brightness.light,
+        ),
       ),
       cardTheme: CardThemeData(
         color: c.cardBg,

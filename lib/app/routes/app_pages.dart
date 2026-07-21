@@ -1,5 +1,12 @@
 import 'package:get/get.dart';
 
+import '../../features/drawer/presentation/pages/about_page.dart';
+import '../../features/incident_report/pages/add_incident_report_page.dart';
+import '../../features/drawer/presentation/pages/contact_us_page.dart';
+import '../../features/drawer/presentation/pages/feedback_page.dart';
+import '../../features/incident_report/pages/incident_report_page.dart';
+import '../../features/drawer/presentation/pages/privacy_policy_page.dart';
+import '../../features/drawer/presentation/pages/risk_information_page.dart';
 import '../../features/emergency/presentation/pages/emergency_page.dart';
 import '../../features/home/presentation/pages/notification_page.dart';
 import '../../features/main_nav/presentation/bindings/main_nav_binding.dart';
@@ -34,6 +41,34 @@ class AppPages {
     GetPage(
       name: AppRoutes.notifications,
       page: () => const NotificationPage(),
+    ),
+    GetPage(
+      name: AppRoutes.about,
+      page: () => const AboutPage(),
+    ),
+    GetPage(
+      name: AppRoutes.riskInformation,
+      page: () => const RiskInformationPage(),
+    ),
+    GetPage(
+      name: AppRoutes.addIncidentReport,
+      page: () => const AddIncidentReportPage(),
+    ),
+    GetPage(
+      name: AppRoutes.incidentReport,
+      page: () => const IncidentReportPage(),
+    ),
+    GetPage(
+      name: AppRoutes.privacyPolicy,
+      page: () => const PrivacyPolicyPage(),
+    ),
+    GetPage(
+      name: AppRoutes.contactUs,
+      page: () => const ContactUsPage(),
+    ),
+    GetPage(
+      name: AppRoutes.feedback,
+      page: () => const FeedbackPage(),
     ),
   ];
 }

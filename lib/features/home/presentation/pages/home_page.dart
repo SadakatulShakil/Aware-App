@@ -8,6 +8,7 @@ import '../../../../app/routes/app_routes.dart';
 import '../../../../app/theme/app_fonts.dart';
 import '../../../../app/theme/app_theme_colors.dart';
 import '../../../../core/utils/convert_utils.dart';
+import '../../../../features/drawer/presentation/widgets/app_drawer.dart';
 import '../../../../shared/widgets/bilingual_label.dart';
 import '../controllers/home_controller.dart';
 import '../widgets/hazard_grid.dart';
@@ -25,20 +26,43 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   final HomeController controller = Get.find<HomeController>();
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  final ScrollController _scrollController = ScrollController();
 
   final RxBool _videoReady = false.obs;
+
+  // The header photo (dark gradient overlay) sits behind the status bar
+  // until the header collapses to the plain scaffold background - icons
+  // must stay light over the photo regardless of app theme, matching
+  // headerText always being white (see AppThemeColors.headerText).
+  bool _headerCollapsed = false;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    _scrollController.addListener(_onScroll);
   }
 
   @override
   void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
+  }
+
+  void _onScroll() {
+    final statusBarHeight = MediaQuery.of(context).padding.top;
+    final carouselHeight = controller.notifications.isNotEmpty ? 56.h : 0.h;
+    final maxExtent = 215.h + carouselHeight + statusBarHeight;
+    final minExtent = 56.h + statusBarHeight;
+    final t = (_scrollController.offset / (maxExtent - minExtent)).clamp(0.0, 1.0);
+    final collapsed = t > 0.6;
+    if (collapsed != _headerCollapsed) {
+      setState(() => _headerCollapsed = collapsed);
+    }
   }
 
   @override
@@ -66,18 +90,23 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
       return AnnotatedRegion<SystemUiOverlayStyle>(
         value: SystemUiOverlayStyle(
           statusBarColor: Colors.transparent,
-          statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
+          statusBarIconBrightness: !_headerCollapsed
+              ? Brightness.light
+              : (isDark ? Brightness.light : Brightness.dark),
         ),
         child: Scaffold(
+          key: _scaffoldKey,
           extendBodyBehindAppBar: true,
           backgroundColor: colors.scaffoldBg,
+          drawer: const AppDrawer(),
           body: Container(
             width: double.infinity,
             height: double.infinity,
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [colors.scaffoldGradientTop, colors.scaffoldGradientBottom],
-                begin: Alignment.topCenter,
+                begin: Alignment.
+                topCenter,
                 end: Alignment.bottomCenter,
               ),
             ),
@@ -85,6 +114,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
               onRefresh: controller.onRefresh,
               edgeOffset: collapsedHeaderHeight,
               child: CustomScrollView(
+                controller: _scrollController,
                 physics:
                     const AlwaysScrollableScrollPhysics(parent: ClampingScrollPhysics()),
                 slivers: [
@@ -256,13 +286,40 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
             ),
           ),
           Positioned(
-            right: 8.w,
+            left: 16.w,
+            top: 0,
+            bottom: 0,
+            child: Center(
+              child: GestureDetector(
+                onTap: () => _scaffoldKey.currentState?.openDrawer(),
+                child: Container(
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF1B5E9E),
+                      borderRadius: BorderRadius.circular(10.r),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(6.0),
+                      child: Icon(Icons.menu, color: titleColor, size: 20.r),
+                    )),
+              ),
+            ),
+          ),
+          Positioned(
+            right: 10.w,
             top: 0,
             bottom: 0,
             child: Center(
               child: GestureDetector(
                 onTap: () => Get.toNamed(AppRoutes.notifications),
-                  child: lottie.Lottie.asset('assets/json/notification_bell.json', width: 45.r))
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF1B5E9E),
+                      borderRadius: BorderRadius.circular(20.r),
+                    ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Icon(Icons.notifications_active_outlined, color: titleColor, size: 20.r),
+                      )))
             ),
           ),
         ],
@@ -297,11 +354,6 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
             }
             return _buildWeatherCard();
           }
-          // No forecast yet. Only show the "No Data" / retry card once we've
-          // genuinely tried and failed - otherwise it flashes on every cold
-          // start for the split second before the first fetch/GPS resolve
-          // completes. isLocationUpdating covers the banner-triggered GPS+
-          // forecast fetch (_fetchGPSAndUpdateWeather), which isSyncingLocation
           // does not - without it the no-data card could flash while that
           // fetch is still in flight.
           final stillResolving = controller.isForecastLoading.value ||

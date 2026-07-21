@@ -56,7 +56,6 @@ class LocalizationString extends Translations {
           'retry': 'Retry',
           'switching_location': 'Switching location...',
           'incident_report': 'Incident Report',
-          'incident_report_coming_soon': 'Coming soon',
 
           // Notification settings page
           'notification_settings': 'Notification Settings',
@@ -102,6 +101,16 @@ class LocalizationString extends Translations {
           'failed_to_load': 'Failed to load data',
           'no_title': 'No Title',
           'alert': 'Alert',
+
+          // App drawer
+          'drawer_about': 'About',
+          'drawer_risk_information': 'Risk Information',
+          'drawer_incident_report': 'Incident Report',
+          'drawer_privacy_policy': 'Privacy Policy',
+          'drawer_contact_us': 'Contact Us',
+          'drawer_feedback': 'Feedback',
+          'app_owner': 'Department of Disaster Management (DDM)',
+          'aware_full_name': 'Advanced Warning & Analytics for Risk & Emergencies',
         },
         'bn': {
           'loc_permission_title': 'অবস্থান অনুমতি',
@@ -149,7 +158,6 @@ class LocalizationString extends Translations {
           'retry': 'পুনরায় চেষ্টা করুন',
           'switching_location': 'লোকেশন পরিবর্তন হচ্ছে...',
           'incident_report': 'ঘটনা রিপোর্ট',
-          'incident_report_coming_soon': 'শীঘ্রই আসছে',
 
           'notification_settings': 'নোটিফিকেশন সেটিংস',
           'notification_settings_subtitle': 'আপনার নোটিফিকেশন পছন্দ পরিচালনা করুন',
@@ -194,6 +202,16 @@ class LocalizationString extends Translations {
           'failed_to_load': 'তথ্য লোড করতে সমস্যা হয়েছে',
           'no_title': 'শিরোনাম নেই',
           'alert': 'সতর্কতা',
+
+          // App drawer
+          'drawer_about': 'অ্যাপ সম্পর্কে',
+          'drawer_risk_information': 'ঝুঁকির তথ্য',
+          'drawer_incident_report': 'ঘটনা রিপোর্ট',
+          'drawer_privacy_policy': 'গোপনীয়তা নীতি',
+          'drawer_contact_us': 'যোগাযোগ করুন',
+          'drawer_feedback': 'মতামত',
+          'app_owner': 'দুর্যোগ ব্যবস্থাপনা অধিদপ্তর (ডিডিএম)',
+          'aware_full_name': 'Advanced Warning & Analytics for Risk & Emergencies',
         },
       };
 }

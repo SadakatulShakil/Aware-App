@@ -5,6 +5,11 @@ class AppConstants {
   static const appFullName =
       'Advanced Warning & Analytics for Risk & Emergencies';
   static const orgName = 'Department of Disaster Management (DDM), MoDMR';
+  static const appVersion = '1.0.0';
+  static const website = 'https://ddm.gov.bd';
+  static const supportEmail = 'info@ddm.gov.bd';
+  static const officeAddress =
+      '92-93 Motijheel Commercial Area, Dhaka-1000, Bangladesh';
 
   // Emergency hotlines (source: rapid.ddm.gov.bd)
   static const hotlines = <Map<String, String>>[
