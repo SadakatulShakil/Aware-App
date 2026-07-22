@@ -1,14 +1,3 @@
-// THROWAWAY DIAGNOSTIC SCRIPT - not app code, not wired into the build.
-// Run: dart run tool/lang_probe.dart
-//
-// Purpose: isolate why GET /hazard/list ignores Accept-Language ONLY for
-// Dart's http client (bug already confirmed vs curl/Python/Postman, which
-// all honor the header correctly). Tests User-Agent and full-header-parity
-// hypotheses before accepting a TLS-fingerprint conclusion.
-//
-// Deliberately bypasses the app's ApiClient - raw package:http calls only,
-// so headers are fully under this script's control.
-
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
