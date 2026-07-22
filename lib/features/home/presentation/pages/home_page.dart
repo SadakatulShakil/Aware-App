@@ -156,12 +156,16 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                         }),
                         _sectionTitle(colors, 'দুর্যোগ পরিস্থিতি', 'Hazards'),
                         SizedBox(height: 10.h),
-                        HazardGrid(
-                          hazards: controller.hazards,
+                        Obx(() => HazardGrid(
+                          hazards: controller.hazards.toList(),
                           onTap: (hazard) {
-                            // TODO: hazard details page - phase 2
+                            if (hazard.url.isEmpty) return;
+                            Get.toNamed(AppRoutes.hazardDetails, arguments: {
+                              'title': hazard.title,
+                              'url': hazard.url,
+                            });
                           },
-                        ),
+                        )),
                       ]),
                     ),
                   ),

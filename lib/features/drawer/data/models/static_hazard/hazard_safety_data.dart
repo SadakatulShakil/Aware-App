@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../../../../home/presentation/widgets/hazard_grid.dart';
-
 class HazardSafetyInfo {
   final String hazardKey;
   final String titleBn;
@@ -17,7 +15,27 @@ class HazardSafetyInfo {
     required this.tips,
   });
 
-  IconData get icon => HazardGrid.iconFor(hazardKey);
+  /// Independent of HazardGrid's icons (those now come from the DDM
+  /// hazard/list API) - this is static preparedness content, so it keeps
+  /// its own fixed icon per hazard type.
+  IconData get icon {
+    switch (hazardKey) {
+      case 'flood':
+        return Icons.flood_outlined;
+      case 'cyclone':
+        return Icons.cyclone_outlined;
+      case 'lightning':
+        return Icons.bolt_outlined;
+      case 'flash_flood':
+        return Icons.waves_outlined;
+      case 'landslide':
+        return Icons.landslide_outlined;
+      case 'earthquake':
+        return Icons.crisis_alert_outlined;
+      default:
+        return Icons.warning_amber_outlined;
+    }
+  }
 }
 
 /// Static safety-tip reference shown on the Risk Information page.

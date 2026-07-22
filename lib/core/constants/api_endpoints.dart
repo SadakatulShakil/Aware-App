@@ -7,9 +7,10 @@ class ApiEndpoints {
   // Planned endpoints - wire these when backend team shares the contract.
   static const weather = '$baseUrl/weather';
   static const alerts = '$baseUrl/alerts';
-  static const hazards = '$baseUrl/hazards';
-  static const services = '$baseUrl/services';
   static const alertOngoing = '$baseUrl/alert/ongoing';
+  static const fcmTokenUpdate = '$baseUrl/notification/token';
+  static const hazardList = '$baseUrl/hazard/list';
+  static const serviceList = '$baseUrl/service/list';
 
   // ---- BMD live weather source (ported 1:1 from BMD Abohawa) ----
   static const bmdBaseUrl = 'https://usf.bmd.gov.bd/api/app';

@@ -6,8 +6,10 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:get/get.dart';
 
 import '../../app/routes/app_routes.dart';
+import '../../features/home/presentation/controllers/home_controller.dart';
 import '../utils/app_logger.dart';
 import 'notification_pref.dart';
+import 'user_pref_service.dart';
 
 /// MUST be top-level - runs in a separate isolate when the app is killed.
 /// No BuildContext, no Get.to, no UI operations allowed here. Registered
@@ -122,12 +124,18 @@ class NotificationService {
 
       final token = await messaging.getToken();
       AppLogger.d('FCM token: $token');
-      // TODO(DDM API): POST token to the DDM backend once that endpoint
-      // exists. Do NOT call BMD's /notification/token - that's their backend.
+      if (token != null) {
+        // Persist only - HomeController's background refresh (2s after UI
+        // is stable) is what actually sends it, once lat/lon are resolved.
+        await Get.find<UserPrefService>().setFcmToken(token);
+      }
 
-      messaging.onTokenRefresh.listen((newToken) {
+      messaging.onTokenRefresh.listen((newToken) async {
         AppLogger.d('FCM token refreshed: $newToken');
-        // TODO(DDM API): push the refreshed token once the endpoint exists.
+        await Get.find<UserPrefService>().setFcmToken(newToken);
+        if (Get.isRegistered<HomeController>()) {
+          Get.find<HomeController>().sendFcmTokenToServer();
+        }
       });
 
       // App is open - FCM is silent on Android, must show locally.

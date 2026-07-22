@@ -12,21 +12,15 @@ class HomeRepository {
 
   HomeRepository(this._api);
 
-  Future<List<NotificationModel>> getNotifications({required String lang}) async {
-    final json = await _api.get(
-      ApiEndpoints.bmdNotificationList,
-      headers: {'Accept-Language': lang},
-    );
+  Future<List<NotificationModel>> getNotifications() async {
+    final json = await _api.get(ApiEndpoints.bmdNotificationList);
     final response = NotificationListResponse.fromJson(json);
     final items = response.result?.notification ?? [];
     return items.where((n) => n.isActive).map(_toNotification).toList();
   }
 
-  Future<List<OngoingBulletinModel>> getOngoingBulletins({required String lang}) async {
-    final json = await _api.get(
-      ApiEndpoints.alertOngoing,
-      headers: {'Accept-Language': lang},
-    );
+  Future<List<OngoingBulletinModel>> getOngoingBulletins() async {
+    final json = await _api.get(ApiEndpoints.alertOngoing);
     return OngoingBulletinModel.listFromJson(json);
   }
 

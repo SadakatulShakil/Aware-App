@@ -2,8 +2,10 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 
+import '../services/user_pref_service.dart';
 import '../utils/app_logger.dart';
 import 'api_exception.dart';
 
@@ -13,9 +15,13 @@ import 'api_exception.dart';
 class ApiClient {
   static const Duration _timeout = Duration(seconds: 30);
 
+  /// Read fresh on every call (never cached) so an instant language toggle
+  /// is reflected in the very next request - no repository may set this
+  /// header itself.
   Map<String, String> _headers() => {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
+        'Accept-Language': Get.find<UserPrefService>().appLanguage,
         // Add auth / api-key headers here in ONE place when backend requires.
       };
 

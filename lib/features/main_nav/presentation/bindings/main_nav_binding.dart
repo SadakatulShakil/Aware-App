@@ -9,6 +9,8 @@ import '../../../home/data/repositories/location_repository.dart';
 import '../../../home/data/repositories/weather_local_repository.dart';
 import '../../../home/data/repositories/weather_repository.dart';
 import '../../../home/presentation/controllers/home_controller.dart';
+import '../../../services/data/repositories/service_repository.dart';
+import '../../../services/presentation/controllers/service_controller.dart';
 import '../controllers/main_nav_controller.dart';
 
 class MainNavBinding extends Bindings {
@@ -21,9 +23,9 @@ class MainNavBinding extends Bindings {
         () => HomeRepository(Get.find<ApiClient>()),
         fenix: true);
     Get.lazyPut<HazardRepository>(
-        () => HazardRepository(Get.isRegistered<AppDatabase>()
-            ? Get.find<AppDatabase>()
-            : null),
+        () => HazardRepository(
+            Get.isRegistered<AppDatabase>() ? Get.find<AppDatabase>() : null,
+            Get.find<ApiClient>()),
         fenix: true);
     Get.lazyPut<WeatherRepository>(
         () => WeatherRepository(Get.find<ApiClient>()),
@@ -34,6 +36,11 @@ class MainNavBinding extends Bindings {
             : null),
         fenix: true);
     Get.lazyPut<LocationRepository>(() => LocationRepository(), fenix: true);
+    Get.lazyPut<ServiceRepository>(
+        () => ServiceRepository(
+            Get.isRegistered<AppDatabase>() ? Get.find<AppDatabase>() : null,
+            Get.find<ApiClient>()),
+        fenix: true);
 
     // Tab controllers
     Get.lazyPut<HomeController>(
@@ -46,6 +53,9 @@ class MainNavBinding extends Bindings {
         fenix: true);
     Get.lazyPut<HazardController>(
         () => HazardController(Get.find<HazardRepository>()),
+        fenix: true);
+    Get.lazyPut<ServiceController>(
+        () => ServiceController(Get.find<ServiceRepository>()),
         fenix: true);
   }
 }

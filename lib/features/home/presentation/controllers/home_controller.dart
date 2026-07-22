@@ -183,6 +183,9 @@ class HomeController extends GetxController {
         fetchHazards(),
       ]);
     });
+    // Fire-and-forget, after the UI is stable - gives lat/lon time to
+    // resolve so the backend gets the token mapped to real coordinates.
+    Future.delayed(const Duration(seconds: 2), () => sendFcmTokenToServer());
   }
 
   /// Re-derives coords then refetches forecast + live weather. Used after
@@ -204,6 +207,12 @@ class HomeController extends GetxController {
       getForecast(lat.value, lon.value),
       fetchLiveWeather(lat.value, lon.value),
     ]);
+
+    // Keeps the backend's token<->location mapping in sync whenever the
+    // active location changes (selectSavedLocation, GPS sync, add-location -
+    // every one of them refetches through this method). Fire-and-forget -
+    // must never block the location switch.
+    sendFcmTokenToServer();
   }
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -298,7 +307,7 @@ class HomeController extends GetxController {
   Future<void> fetchNotifications() async {
     isNotificationsLoading.value = true;
     try {
-      final fresh = await _homeRepo.getNotifications(lang: userService.appLanguage);
+      final fresh = await _homeRepo.getNotifications();
       notifications.assignAll(fresh);
       notificationsLoadError.value = false;
       await _localRepo.cacheNotifications(fresh);
@@ -316,7 +325,7 @@ class HomeController extends GetxController {
   Future<void> fetchOngoingBulletins() async {
     isOngoingBulletinsLoading.value = true;
     try {
-      final fresh = await _homeRepo.getOngoingBulletins(lang: userService.appLanguage);
+      final fresh = await _homeRepo.getOngoingBulletins();
       ongoingBulletins.assignAll(fresh);
     } catch (e) {
       // Keep whatever is currently displayed on failure.
@@ -324,6 +333,19 @@ class HomeController extends GetxController {
     } finally {
       isOngoingBulletinsLoading.value = false;
     }
+  }
+
+  /// Ported from BMD's sendFcmTokenToServer - fire-and-forget upload of the
+  /// FCM token, tagged with the user's current lat/lon. Never blocks or
+  /// throws; WeatherRepository.updateFcmToken already swallows failures.
+  Future<void> sendFcmTokenToServer() async {
+    final token = userService.fcmToken;
+    if (token == null || token.isEmpty) return;
+    await _weatherRepo.updateFcmToken(
+      token: token,
+      lat: userService.lat,
+      lon: userService.lon,
+    );
   }
 
   Future<void> fetchHazards() async {

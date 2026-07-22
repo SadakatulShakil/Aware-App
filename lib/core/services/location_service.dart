@@ -44,7 +44,6 @@ class LocationService {
       if (position == null) return false;
 
       final api = Get.find<ApiClient>();
-      final lang = prefs.appLanguage;
       final json = await api.get(
         ApiEndpoints.bmdForecast,
         query: {
@@ -52,7 +51,6 @@ class LocationService {
           'lat': '${position.latitude}',
           'lon': '${position.longitude}',
         },
-        headers: {'Accept-Language': lang},
       ).timeout(Duration(seconds: timeoutSeconds));
 
       final forecast = WeatherForecastModel.fromJson(json);

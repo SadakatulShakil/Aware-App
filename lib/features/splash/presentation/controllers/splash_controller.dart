@@ -31,7 +31,9 @@ class SplashController extends GetxController {
 
     // 3. Floor database (guarded - app must run even if codegen/db fails)
     try {
-      final db = await $FloorAppDatabase.databaseBuilder('aware.db').build();
+      final db = await $FloorAppDatabase.databaseBuilder('aware.db')
+          .addMigrations([hazardsMigrationV2ToV3, servicesMigrationV3ToV4])
+          .build();
       Get.put<AppDatabase>(db, permanent: true);
     } catch (e) {
       AppLogger.e('Floor DB init failed', e);

@@ -33,6 +33,7 @@ class UserPrefService {
   static const _kSavedLocations = 'SAVED_LOCATIONS';
   static const _kLiveVideoUrl = 'live_video_url';
   static const _kLiveWeatherType = 'live_weather_type';
+  static const _kFcmToken = 'FCM_TOKEN';
 
   Future<UserPrefService> init() async {
     _prefs = await SharedPreferences.getInstance();
@@ -53,6 +54,10 @@ class UserPrefService {
   Future<void> setBool(String key, bool value) => _prefs.setBool(key, value);
   String? getString(String key) => _prefs.getString(key);
   Future<void> setString(String key, String value) => _prefs.setString(key, value);
+
+  // ---- FCM token (sent to DDM backend, mapped to the user's lat/lon) ----
+  String? get fcmToken => _prefs.getString(_kFcmToken);
+  Future<void> setFcmToken(String token) => _prefs.setString(_kFcmToken, token);
 
   // ---- App language ----
   String get appLanguage => _prefs.getString(_kAppLanguage) ?? 'bn';

@@ -76,13 +76,15 @@ class _$AppDatabase extends AppDatabase {
 
   CacheDao? _cacheDaoInstance;
 
+  ServiceDao? _serviceDaoInstance;
+
   Future<sqflite.Database> open(
     String path,
     List<Migration> migrations, [
     Callback? callback,
   ]) async {
     final databaseOptions = sqflite.OpenDatabaseOptions(
-      version: 2,
+      version: 4,
       onConfigure: (database) async {
         await database.execute('PRAGMA foreign_keys = ON');
         await callback?.onConfigure?.call(database);
@@ -98,9 +100,11 @@ class _$AppDatabase extends AppDatabase {
       },
       onCreate: (database, version) async {
         await database.execute(
-            'CREATE TABLE IF NOT EXISTS `hazards` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `hazardKey` TEXT NOT NULL, `titleEn` TEXT NOT NULL, `titleBn` TEXT NOT NULL, `severity` TEXT, `summary` TEXT, `updatedAt` INTEGER NOT NULL)');
+            'CREATE TABLE IF NOT EXISTS `hazards` (`id` TEXT NOT NULL, `title` TEXT NOT NULL, `iconUrl` TEXT NOT NULL, `url` TEXT NOT NULL, `lang` TEXT NOT NULL, `updatedAt` INTEGER NOT NULL, PRIMARY KEY (`id`))');
         await database.execute(
             'CREATE TABLE IF NOT EXISTS `cache` (`key` TEXT NOT NULL, `jsonData` TEXT NOT NULL, `timestamp` INTEGER NOT NULL, PRIMARY KEY (`key`))');
+        await database.execute(
+            'CREATE TABLE IF NOT EXISTS `services` (`id` TEXT NOT NULL, `title` TEXT NOT NULL, `iconUrl` TEXT NOT NULL, `url` TEXT NOT NULL, `lang` TEXT NOT NULL, `updatedAt` INTEGER NOT NULL, PRIMARY KEY (`id`))');
 
         await callback?.onCreate?.call(database, version);
       },
@@ -117,6 +121,11 @@ class _$AppDatabase extends AppDatabase {
   CacheDao get cacheDao {
     return _cacheDaoInstance ??= _$CacheDao(database, changeListener);
   }
+
+  @override
+  ServiceDao get serviceDao {
+    return _serviceDaoInstance ??= _$ServiceDao(database, changeListener);
+  }
 }
 
 class _$HazardDao extends HazardDao {
@@ -129,11 +138,10 @@ class _$HazardDao extends HazardDao {
             'hazards',
             (HazardEntity item) => <String, Object?>{
                   'id': item.id,
-                  'hazardKey': item.hazardKey,
-                  'titleEn': item.titleEn,
-                  'titleBn': item.titleBn,
-                  'severity': item.severity,
-                  'summary': item.summary,
+                  'title': item.title,
+                  'iconUrl': item.iconUrl,
+                  'url': item.url,
+                  'lang': item.lang,
                   'updatedAt': item.updatedAt
                 });
 
@@ -149,12 +157,11 @@ class _$HazardDao extends HazardDao {
   Future<List<HazardEntity>> findAll() async {
     return _queryAdapter.queryList('SELECT * FROM hazards ORDER BY id ASC',
         mapper: (Map<String, Object?> row) => HazardEntity(
-            id: row['id'] as int?,
-            hazardKey: row['hazardKey'] as String,
-            titleEn: row['titleEn'] as String,
-            titleBn: row['titleBn'] as String,
-            severity: row['severity'] as String?,
-            summary: row['summary'] as String?,
+            id: row['id'] as String,
+            title: row['title'] as String,
+            iconUrl: row['iconUrl'] as String,
+            url: row['url'] as String,
+            lang: row['lang'] as String,
             updatedAt: row['updatedAt'] as int));
   }
 
@@ -205,7 +212,7 @@ class _$CacheDao extends CacheDao {
   @override
   Future<CacheEntity?> getLatestForecastCache() async {
     return _queryAdapter.query(
-        "SELECT * FROM cache WHERE `key` LIKE 'forecast_%' ORDER BY timestamp DESC LIMIT 1",
+        'SELECT * FROM cache WHERE `key` LIKE \'forecast_%\' ORDER BY timestamp DESC LIMIT 1',
         mapper: (Map<String, Object?> row) => CacheEntity(
             key: row['key'] as String,
             jsonData: row['jsonData'] as String,
@@ -216,5 +223,54 @@ class _$CacheDao extends CacheDao {
   Future<void> upsert(CacheEntity entity) async {
     await _cacheEntityInsertionAdapter.insert(
         entity, OnConflictStrategy.replace);
+  }
+}
+
+class _$ServiceDao extends ServiceDao {
+  _$ServiceDao(
+    this.database,
+    this.changeListener,
+  )   : _queryAdapter = QueryAdapter(database),
+        _serviceModelInsertionAdapter = InsertionAdapter(
+            database,
+            'services',
+            (ServiceModel item) => <String, Object?>{
+                  'id': item.id,
+                  'title': item.title,
+                  'iconUrl': item.iconUrl,
+                  'url': item.url,
+                  'lang': item.lang,
+                  'updatedAt': item.updatedAt
+                });
+
+  final sqflite.DatabaseExecutor database;
+
+  final StreamController<String> changeListener;
+
+  final QueryAdapter _queryAdapter;
+
+  final InsertionAdapter<ServiceModel> _serviceModelInsertionAdapter;
+
+  @override
+  Future<List<ServiceModel>> findAll() async {
+    return _queryAdapter.queryList('SELECT * FROM services ORDER BY id ASC',
+        mapper: (Map<String, Object?> row) => ServiceModel(
+            id: row['id'] as String,
+            title: row['title'] as String,
+            iconUrl: row['iconUrl'] as String,
+            url: row['url'] as String,
+            lang: row['lang'] as String,
+            updatedAt: row['updatedAt'] as int));
+  }
+
+  @override
+  Future<void> clearAll() async {
+    await _queryAdapter.queryNoReturn('DELETE FROM services');
+  }
+
+  @override
+  Future<void> insertAll(List<ServiceModel> services) async {
+    await _serviceModelInsertionAdapter.insertList(
+        services, OnConflictStrategy.replace);
   }
 }

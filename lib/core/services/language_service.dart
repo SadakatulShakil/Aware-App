@@ -4,6 +4,7 @@ import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 
 import '../../features/home/presentation/controllers/home_controller.dart';
+import '../../features/services/presentation/controllers/service_controller.dart';
 import 'user_pref_service.dart';
 
 /// Reactive language holder, backed by GetX's Translations (see
@@ -47,10 +48,14 @@ class LanguageService extends GetxService {
     final refreshes = <Future<void>>[
       home.fetchNotifications(),
       home.fetchOngoingBulletins(),
+      home.fetchHazards(),
     ];
     if (home.lat.value.isNotEmpty) {
       refreshes.add(home.getForecast(home.lat.value, home.lon.value));
       refreshes.add(home.fetchLiveWeather(home.lat.value, home.lon.value));
+    }
+    if (Get.isRegistered<ServiceController>()) {
+      refreshes.add(Get.find<ServiceController>().load());
     }
     await Future.wait(refreshes);
   }

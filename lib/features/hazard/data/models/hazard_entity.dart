@@ -2,40 +2,46 @@ import 'package:floor/floor.dart';
 
 @Entity(tableName: 'hazards')
 class HazardEntity {
-  @PrimaryKey(autoGenerate: true)
-  final int? id;
+  @PrimaryKey()
+  final String id;
+  final String title;
+  final String iconUrl;
+  final String url;
 
-  /// flood | cyclone | lightning | flash_flood | landslide | earthquake
-  final String hazardKey;
-  final String titleEn;
-  final String titleBn;
-
-  /// normal | moderate | heavy | extreme (null = no active alert)
-  final String? severity;
-
-  /// Short status/summary shown on card - will come from API later.
-  final String? summary;
+  /// 'bn' | 'en' - the app language this row was fetched in. Used to
+  /// detect a stale-language cache (see HazardRepository).
+  final String lang;
 
   final int updatedAt; // epoch millis
 
   HazardEntity({
-    this.id,
-    required this.hazardKey,
-    required this.titleEn,
-    required this.titleBn,
-    this.severity,
-    this.summary,
+    required this.id,
+    required this.title,
+    required this.iconUrl,
+    required this.url,
+    required this.lang,
     required this.updatedAt,
   });
 
-  /// For the future API integration - repository will map JSON -> entity
-  /// and upsert into Floor, UI keeps reading the same table (offline-first).
-  factory HazardEntity.fromJson(Map<String, dynamic> json) => HazardEntity(
-        hazardKey: json['hazard_key'] ?? '',
-        titleEn: json['title_en'] ?? '',
-        titleBn: json['title_bn'] ?? '',
-        severity: json['severity'],
-        summary: json['summary'],
+  /// Maps the DDM hazard/list response - titles come back already
+  /// localized for the requested language, so there is no local
+  /// translation map here. The caller (HazardRepository) supplies [lang].
+  factory HazardEntity.fromJson(Map<String, dynamic> json, {required String lang}) =>
+      HazardEntity(
+        id: json['id']?.toString() ?? '',
+        title: json['title'] ?? '',
+        iconUrl: json['icon'] ?? '',
+        url: json['url'] ?? '',
+        lang: lang,
         updatedAt: DateTime.now().millisecondsSinceEpoch,
       );
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'title': title,
+        'icon': iconUrl,
+        'url': url,
+        'lang': lang,
+        'updatedAt': updatedAt,
+      };
 }

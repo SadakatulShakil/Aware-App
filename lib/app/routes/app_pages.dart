@@ -10,6 +10,7 @@ import '../../features/incident_report/pages/incident_report_page.dart';
 import '../../features/drawer/presentation/pages/privacy_policy_page.dart';
 import '../../features/drawer/presentation/pages/risk_information_page.dart';
 import '../../features/emergency/presentation/pages/emergency_page.dart';
+import '../../features/hazard/presentation/pages/hazard_webview_page.dart';
 import '../../features/home/presentation/pages/notification_page.dart';
 import '../../features/main_nav/presentation/bindings/main_nav_binding.dart';
 import '../../features/main_nav/presentation/pages/main_nav_page.dart';
@@ -35,6 +36,16 @@ class AppPages {
     GetPage(
       name: AppRoutes.emergency,
       page: () => const EmergencyPage(),
+    ),
+    GetPage(
+      name: AppRoutes.hazardDetails,
+      page: () {
+        final args = Get.arguments as Map<String, dynamic>? ?? {};
+        return HazardWebViewPage(
+          title: args['title'] as String? ?? '',
+          url: args['url'] as String? ?? '',
+        );
+      },
     ),
     GetPage(
       name: AppRoutes.notificationSettings,

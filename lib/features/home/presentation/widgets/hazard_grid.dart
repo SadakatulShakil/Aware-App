@@ -1,43 +1,21 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:get/get.dart';
 
 import '../../../../app/theme/app_text_styles.dart';
 import '../../../../app/theme/app_theme_colors.dart';
-import '../../../../core/services/user_pref_service.dart';
 import '../../../hazard/data/models/hazard_entity.dart';
 
-/// 3x2 hazard grid per the sketch:
-/// Flood | Cyclone | Lightning / Flash Flood | Landslide | Earthquake
+/// 3-col hazard grid, icons + titles sourced from the DDM hazard/list API.
 class HazardGrid extends StatelessWidget {
   final List<HazardEntity> hazards;
   final void Function(HazardEntity hazard)? onTap;
 
   const HazardGrid({super.key, required this.hazards, this.onTap});
 
-  static IconData iconFor(String key) {
-    switch (key) {
-      case 'flood':
-        return Icons.flood_outlined;
-      case 'cyclone':
-        return Icons.cyclone_outlined;
-      case 'lightning':
-        return Icons.bolt_outlined;
-      case 'flash_flood':
-        return Icons.waves_outlined;
-      case 'landslide':
-        return Icons.landslide_outlined;
-      case 'earthquake':
-        return Icons.crisis_alert_outlined;
-      default:
-        return Icons.warning_amber_outlined;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final c = AppThemeColors.of(Theme.of(context).brightness == Brightness.dark);
-    final isBangla = Get.find<UserPrefService>().isBangla;
 
     return GridView.builder(
       shrinkWrap: true,
@@ -52,7 +30,6 @@ class HazardGrid extends StatelessWidget {
       itemCount: hazards.length,
       itemBuilder: (_, i) {
         final hazard = hazards[i];
-        final severityColor = c.severityOf(hazard.severity);
         return InkWell(
           onTap: () => onTap?.call(hazard),
           borderRadius: BorderRadius.circular(16.r),
@@ -73,23 +50,29 @@ class HazardGrid extends StatelessWidget {
                 Container(
                   padding: EdgeInsets.all(10.w),
                   decoration: BoxDecoration(
-                    color: severityColor.withOpacity(0.12),
+                    color: c.primary.withOpacity(0.12),
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(iconFor(hazard.hazardKey),
-                      color: severityColor, size: 26.sp),
+                  child: hazard.iconUrl.isEmpty
+                      ? Icon(Icons.warning_amber_outlined, color: c.primary, size: 26.sp)
+                      : CachedNetworkImage(
+                          imageUrl: hazard.iconUrl,
+                          fit: BoxFit.contain,
+                          width: 26.sp,
+                          height: 26.sp,
+                          placeholder: (_, __) => SizedBox(width: 26.sp, height: 26.sp),
+                          errorWidget: (_, __, ___) =>
+                              Icon(Icons.warning_amber_outlined, color: c.primary, size: 26.sp),
+                        ),
                 ),
                 SizedBox(height: 8.h),
-                Text(hazard.titleBn,
-                    style: isBangla
-                        ? AppTextStyles.caption(c.textPrimary)
-                            .copyWith(fontWeight: FontWeight.w600)
-                        : TextStyle(fontSize: 10.sp, color: c.textSecondary)),
-                Text(hazard.titleEn,
-                    style: isBangla
-                        ? TextStyle(fontSize: 10.sp, color: c.textSecondary)
-                        : AppTextStyles.caption(c.textPrimary)
-                            .copyWith(fontWeight: FontWeight.w600)),
+                Text(
+                  hazard.title,
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTextStyles.caption(c.textPrimary).copyWith(fontWeight: FontWeight.w600),
+                ),
               ],
             ),
           ),
