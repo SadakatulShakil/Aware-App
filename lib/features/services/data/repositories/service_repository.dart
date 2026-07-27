@@ -23,19 +23,19 @@ class ServiceRepository {
   Future<List<ServiceModel>> getServices() async {
     final currentLang = Get.find<UserPrefService>().appLanguage;
     try {
-      return await _fetchAndCache(currentLang);
+      return await _fetchAndCache();
     } catch (e) {
       AppLogger.w('Service fetch failed, falling back to cache: $e');
       return _fallbackFromCache(currentLang);
     }
   }
 
-  Future<List<ServiceModel>> _fetchAndCache(String lang) async {
+  Future<List<ServiceModel>> _fetchAndCache() async {
     final json = await _api.get(ApiEndpoints.serviceList);
     if (json['status'] != true) throw ApiException.parsing();
 
     final items = (json['result'] as List)
-        .map((e) => ServiceModel.fromJson(e as Map<String, dynamic>, lang: lang))
+        .map((e) => ServiceModel.fromJson(e as Map<String, dynamic>))
         .toList();
 
     final db = _db;
@@ -54,14 +54,6 @@ class ServiceRepository {
     try {
       final cached = await db.serviceDao.findAll();
       if (cached.isEmpty) return ServiceStaticData.seed(lang: currentLang);
-
-      if (cached.first.lang != currentLang) {
-        // Wrong-language cache (e.g. language changed while offline) - show
-        // it now rather than nothing, and opportunistically retry the live
-        // fetch so Floor holds the right language as soon as network
-        // returns (picked up by the next load()/UI refresh).
-        unawaited(_fetchAndCache(currentLang).catchError((_) => <ServiceModel>[]));
-      }
       return cached;
     } catch (e) {
       AppLogger.w('Service cache read failed, using static seed: $e');

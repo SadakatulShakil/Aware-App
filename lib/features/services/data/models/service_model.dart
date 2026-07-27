@@ -7,11 +7,6 @@ class ServiceModel {
   final String title;
   final String iconUrl;
   final String url;
-
-  /// 'bn' | 'en' - the app language this row was fetched in. Used to
-  /// detect a stale-language cache (see ServiceRepository).
-  final String lang;
-
   final int updatedAt; // epoch millis
 
   ServiceModel({
@@ -19,7 +14,6 @@ class ServiceModel {
     required this.title,
     required this.iconUrl,
     required this.url,
-    required this.lang,
     required this.updatedAt,
   });
 
@@ -31,16 +25,13 @@ class ServiceModel {
   String get displayTitle =>
       title.replaceAll(r'\n', '\n').replaceAll(RegExp(r'<br\s*/?>'), '\n').trim();
 
-  /// Maps the DDM service/list response - the caller (ServiceRepository)
-  /// supplies [lang] (titles here are technical/acronym names and come
-  /// back the same regardless of language).
-  factory ServiceModel.fromJson(Map<String, dynamic> json, {required String lang}) =>
-      ServiceModel(
+  /// Maps the DDM service/list response - titles here are technical/acronym
+  /// names and come back the same regardless of the requested language.
+  factory ServiceModel.fromJson(Map<String, dynamic> json) => ServiceModel(
         id: json['id']?.toString() ?? '',
         title: json['title'] ?? '',
         iconUrl: json['icon'] ?? '',
         url: json['url'] ?? '',
-        lang: lang,
         updatedAt: DateTime.now().millisecondsSinceEpoch,
       );
 
@@ -49,7 +40,6 @@ class ServiceModel {
         'title': title,
         'icon': iconUrl,
         'url': url,
-        'lang': lang,
         'updatedAt': updatedAt,
       };
 }

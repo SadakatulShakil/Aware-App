@@ -84,7 +84,7 @@ class _$AppDatabase extends AppDatabase {
     Callback? callback,
   ]) async {
     final databaseOptions = sqflite.OpenDatabaseOptions(
-      version: 4,
+      version: 5,
       onConfigure: (database) async {
         await database.execute('PRAGMA foreign_keys = ON');
         await callback?.onConfigure?.call(database);
@@ -100,11 +100,11 @@ class _$AppDatabase extends AppDatabase {
       },
       onCreate: (database, version) async {
         await database.execute(
-            'CREATE TABLE IF NOT EXISTS `hazards` (`id` TEXT NOT NULL, `title` TEXT NOT NULL, `iconUrl` TEXT NOT NULL, `url` TEXT NOT NULL, `lang` TEXT NOT NULL, `updatedAt` INTEGER NOT NULL, PRIMARY KEY (`id`))');
+            'CREATE TABLE IF NOT EXISTS `hazards` (`id` TEXT NOT NULL, `title` TEXT NOT NULL, `iconUrl` TEXT NOT NULL, `url` TEXT NOT NULL, `updatedAt` INTEGER NOT NULL, PRIMARY KEY (`id`))');
         await database.execute(
             'CREATE TABLE IF NOT EXISTS `cache` (`key` TEXT NOT NULL, `jsonData` TEXT NOT NULL, `timestamp` INTEGER NOT NULL, PRIMARY KEY (`key`))');
         await database.execute(
-            'CREATE TABLE IF NOT EXISTS `services` (`id` TEXT NOT NULL, `title` TEXT NOT NULL, `iconUrl` TEXT NOT NULL, `url` TEXT NOT NULL, `lang` TEXT NOT NULL, `updatedAt` INTEGER NOT NULL, PRIMARY KEY (`id`))');
+            'CREATE TABLE IF NOT EXISTS `services` (`id` TEXT NOT NULL, `title` TEXT NOT NULL, `iconUrl` TEXT NOT NULL, `url` TEXT NOT NULL, `updatedAt` INTEGER NOT NULL, PRIMARY KEY (`id`))');
 
         await callback?.onCreate?.call(database, version);
       },
@@ -141,7 +141,6 @@ class _$HazardDao extends HazardDao {
                   'title': item.title,
                   'iconUrl': item.iconUrl,
                   'url': item.url,
-                  'lang': item.lang,
                   'updatedAt': item.updatedAt
                 });
 
@@ -161,7 +160,6 @@ class _$HazardDao extends HazardDao {
             title: row['title'] as String,
             iconUrl: row['iconUrl'] as String,
             url: row['url'] as String,
-            lang: row['lang'] as String,
             updatedAt: row['updatedAt'] as int));
   }
 
@@ -239,7 +237,6 @@ class _$ServiceDao extends ServiceDao {
                   'title': item.title,
                   'iconUrl': item.iconUrl,
                   'url': item.url,
-                  'lang': item.lang,
                   'updatedAt': item.updatedAt
                 });
 
@@ -259,7 +256,6 @@ class _$ServiceDao extends ServiceDao {
             title: row['title'] as String,
             iconUrl: row['iconUrl'] as String,
             url: row['url'] as String,
-            lang: row['lang'] as String,
             updatedAt: row['updatedAt'] as int));
   }
 

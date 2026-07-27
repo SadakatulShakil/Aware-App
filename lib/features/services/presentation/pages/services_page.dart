@@ -70,6 +70,8 @@ class ServicesPage extends GetView<ServiceController> {
                               fit: BoxFit.contain,
                               width: 28.sp,
                               height: 28.sp,
+                              memCacheWidth: (28.sp * 3).round(),
+                              memCacheHeight: (28.sp * 3).round(),
                               placeholder: (_, __) => SizedBox(width: 28.sp, height: 28.sp),
                               errorWidget: (_, __, ___) =>
                                   Icon(Icons.widgets_outlined, color: c.primary, size: 28.sp),

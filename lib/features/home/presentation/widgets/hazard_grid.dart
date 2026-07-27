@@ -60,6 +60,8 @@ class HazardGrid extends StatelessWidget {
                           fit: BoxFit.contain,
                           width: 26.sp,
                           height: 26.sp,
+                          memCacheWidth: (26.sp * 3).round(),
+                          memCacheHeight: (26.sp * 3).round(),
                           placeholder: (_, __) => SizedBox(width: 26.sp, height: 26.sp),
                           errorWidget: (_, __, ___) =>
                               Icon(Icons.warning_amber_outlined, color: c.primary, size: 26.sp),

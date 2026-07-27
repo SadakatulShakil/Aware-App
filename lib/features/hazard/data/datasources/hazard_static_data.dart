@@ -22,7 +22,6 @@ class HazardStaticData {
           title: pick(titleBn, titleEn),
           iconUrl: '',
           url: '',
-          lang: lang,
           updatedAt: now,
         );
 

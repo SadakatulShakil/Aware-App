@@ -19,7 +19,6 @@ class ServiceStaticData {
           title: title,
           iconUrl: iconUrl,
           url: webviewUrl,
-          lang: lang,
           updatedAt: now,
         );
 

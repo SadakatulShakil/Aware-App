@@ -22,25 +22,22 @@ class HazardRepository {
 
   Future<List<HazardEntity>> getHazards() async {
     final currentLang = Get.find<UserPrefService>().appLanguage;
-    print('HazardRepository.getHazards() called for lang=$currentLang');
     try {
-      return await _fetchAndCache(currentLang);
+      return await _fetchAndCache();
     } catch (e) {
       AppLogger.w('Hazard fetch failed, falling back to cache: $e');
       return _fallbackFromCache(currentLang);
     }
   }
 
-  Future<List<HazardEntity>> _fetchAndCache(String lang) async {
+  Future<List<HazardEntity>> _fetchAndCache() async {
     final json = await _api.get(ApiEndpoints.hazardList);
     if (json['status'] != true) throw ApiException.parsing();
 
     final items = (json['result'] as List)
-        .map((e) => HazardEntity.fromJson(e as Map<String, dynamic>, lang: lang))
+        .map((e) => HazardEntity.fromJson(e as Map<String, dynamic>))
         .toList();
 
-    // print('HazardRepository._fetchAndCache() fetched ${items.length} items for lang=$lang');
-    // print('First item: ${items.isNotEmpty ? items.first.toJson() : 'none'}');
     final db = _db;
     if (db != null) {
       await db.hazardDao.clearAll();
@@ -57,14 +54,6 @@ class HazardRepository {
     try {
       final cached = await db.hazardDao.findAll();
       if (cached.isEmpty) return HazardStaticData.seed(lang: currentLang);
-
-      if (cached.first.lang != currentLang) {
-        // Wrong-language cache (e.g. language changed while offline) - show
-        // it now rather than nothing, and opportunistically retry the live
-        // fetch so Floor holds the right language as soon as network
-        // returns (picked up by the next fetchHazards() call/UI refresh).
-        unawaited(_fetchAndCache(currentLang).catchError((_) => <HazardEntity>[]));
-      }
       return cached;
     } catch (e) {
       AppLogger.w('Hazard cache read failed, using static seed: $e');

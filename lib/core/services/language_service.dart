@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 
+import '../../features/hazard/presentation/controllers/hazard_controller.dart';
 import '../../features/home/presentation/controllers/home_controller.dart';
 import '../../features/services/presentation/controllers/service_controller.dart';
 import 'user_pref_service.dart';
@@ -56,6 +57,9 @@ class LanguageService extends GetxService {
     }
     if (Get.isRegistered<ServiceController>()) {
       refreshes.add(Get.find<ServiceController>().load());
+    }
+    if (Get.isRegistered<HazardController>()) {
+      refreshes.add(Get.find<HazardController>().load());
     }
     await Future.wait(refreshes);
   }

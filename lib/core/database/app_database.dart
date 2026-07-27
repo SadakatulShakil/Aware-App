@@ -32,9 +32,23 @@ final servicesMigrationV3ToV4 = Migration(3, 4, (database) async {
       'CREATE TABLE IF NOT EXISTS `services` (`id` TEXT NOT NULL, `title` TEXT NOT NULL, `iconUrl` TEXT NOT NULL, `url` TEXT NOT NULL, `lang` TEXT NOT NULL, `updatedAt` INTEGER NOT NULL, PRIMARY KEY (`id`))');
 });
 
+/// v4 -> v5: drops the `lang` column from `hazards`/`services` - both are
+/// re-fetched from the API (which already responds in the requested
+/// language via Accept-Language), so a per-row cached language was never
+/// needed. Same drop+recreate approach as the earlier migrations - it's
+/// just an offline cache, re-seeded on the next successful fetch.
+final dropLangColumnMigrationV4ToV5 = Migration(4, 5, (database) async {
+  await database.execute('DROP TABLE IF EXISTS `hazards`');
+  await database.execute(
+      'CREATE TABLE IF NOT EXISTS `hazards` (`id` TEXT NOT NULL, `title` TEXT NOT NULL, `iconUrl` TEXT NOT NULL, `url` TEXT NOT NULL, `updatedAt` INTEGER NOT NULL, PRIMARY KEY (`id`))');
+  await database.execute('DROP TABLE IF EXISTS `services`');
+  await database.execute(
+      'CREATE TABLE IF NOT EXISTS `services` (`id` TEXT NOT NULL, `title` TEXT NOT NULL, `iconUrl` TEXT NOT NULL, `url` TEXT NOT NULL, `updatedAt` INTEGER NOT NULL, PRIMARY KEY (`id`))');
+});
+
 /// Run once after pub get:
 ///   dart run build_runner build --delete-conflicting-outputs
-@Database(version: 4, entities: [HazardEntity, CacheEntity, ServiceModel])
+@Database(version: 5, entities: [HazardEntity, CacheEntity, ServiceModel])
 abstract class AppDatabase extends FloorDatabase {
   HazardDao get hazardDao;
   CacheDao get cacheDao;

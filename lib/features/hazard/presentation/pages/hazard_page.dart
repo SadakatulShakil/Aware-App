@@ -75,6 +75,8 @@ class HazardPage extends GetView<HazardController> {
                                 fit: BoxFit.contain,
                                 width: 24.sp,
                                 height: 24.sp,
+                                memCacheWidth: (24.sp * 3).round(),
+                                memCacheHeight: (24.sp * 3).round(),
                                 placeholder: (_, __) => SizedBox(width: 24.sp, height: 24.sp),
                                 errorWidget: (_, __, ___) => Icon(Icons.warning_amber_outlined,
                                     color: c.primary, size: 24.sp),
