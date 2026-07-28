@@ -13,6 +13,7 @@ import '../../../../../core/utils/convert_utils.dart';
 /// with an "Incident Report" button (same position/style).
 class BaseWeatherCard extends StatelessWidget {
   final String temp;
+  final String icon;
   final String tempMax;
   final String tempMin;
   final String rainMin;
@@ -25,6 +26,7 @@ class BaseWeatherCard extends StatelessWidget {
   const BaseWeatherCard({
     super.key,
     required this.temp,
+    required this.icon,
     required this.tempMax,
     required this.tempMin,
     required this.rainMin,
@@ -67,18 +69,39 @@ class BaseWeatherCard extends StatelessWidget {
               SizedBox(height: 4.h),
               Row(
                 crossAxisAlignment: CrossAxisAlignment.end,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(displayTemp,
-                      style: AppFonts.style(
-                          fontSize: 62.sp,
-                          fontWeight: FontWeight.bold,
-                          color: mainTextColor,
-                          height: 0.8)),
-                  Padding(
-                    padding: EdgeInsets.only(bottom: 8.h, left: 2.w),
-                    child: Text('temp_unit_full'.tr,
-                        style: TextStyle(
-                            fontSize: 24.sp, color: mainTextColor, fontWeight: FontWeight.bold)),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(displayTemp,
+                          style: AppFonts.style(
+                              fontSize: 62.sp,
+                              fontWeight: FontWeight.bold,
+                              color: mainTextColor,
+                              height: 0.8)),
+                      Padding(
+                        padding: EdgeInsets.only(bottom: 8.h, left: 2.w),
+                        child: Text('temp_unit_full'.tr,
+                            style: TextStyle(
+                                fontSize: 24.sp,
+                                color: mainTextColor,
+                                fontWeight: FontWeight.bold)),
+                      ),
+                    ],
+                  ),
+                  Image.network(
+                    icon,
+                    height: 55.h,
+                    fit: BoxFit.contain,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Image.network(
+                        'https://usf.bmd.gov.bd/src/weather_icon/ic_partly_cloudy.png',
+                        height: 55.h,
+                        fit: BoxFit.contain,
+                      );
+                    },
                   ),
                 ],
               ),

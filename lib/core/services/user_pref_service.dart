@@ -33,6 +33,7 @@ class UserPrefService {
   static const _kSavedLocations = 'SAVED_LOCATIONS';
   static const _kLiveVideoUrl = 'live_video_url';
   static const _kLiveWeatherType = 'live_weather_type';
+  static const _kLiveWeatherIcon = 'live_weather_icon';
   static const _kFcmToken = 'FCM_TOKEN';
 
   Future<UserPrefService> init() async {
@@ -372,13 +373,16 @@ class UserPrefService {
   Future<void> cacheLiveWeather({
     required String videoUrl,
     required String type,
+    required String icon,
   }) async {
     await _prefs.setString(_kLiveVideoUrl, videoUrl);
     await _prefs.setString(_kLiveWeatherType, type);
+    await _prefs.setString(_kLiveWeatherIcon, icon);
   }
 
   String get cachedLiveVideoUrl => _prefs.getString(_kLiveVideoUrl) ?? '';
   String get cachedLiveWeatherType => _prefs.getString(_kLiveWeatherType) ?? '';
+  String get cachedLiveWeatherIcon => _prefs.getString(_kLiveWeatherIcon) ?? '';
 
   Future<void> clearLiveWeatherCache() async {
     await _prefs.remove(_kLiveVideoUrl);

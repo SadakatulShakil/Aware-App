@@ -1,3 +1,4 @@
+import 'package:aware/core/constants/api_endpoints.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -14,6 +15,7 @@ import '../../../../shared/widgets/bilingual_label.dart';
 import '../controllers/home_controller.dart';
 import '../widgets/hazard_grid.dart';
 import '../widgets/header_notification_carousel.dart';
+import '../widgets/home_shimmer.dart';
 import '../widgets/ongoing_bulletin_carousel.dart';
 import '../widgets/weather/base_weather_card.dart';
 import '../widgets/weather/weather_video_background.dart';
@@ -141,6 +143,18 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                     sliver: SliverList(
                       delegate: SliverChildListDelegate([
                         Obx(() {
+                          if (controller.isOngoingBulletinsLoading.value &&
+                              controller.ongoingBulletins.isEmpty) {
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                _sectionTitle(colors, 'চলমান বুলেটিন', 'Ongoing Bulletin'),
+                                SizedBox(height: 10.h),
+                                const BulletinCarouselShimmer(),
+                                SizedBox(height: 20.h),
+                              ],
+                            );
+                          }
                           if (controller.ongoingBulletins.isEmpty) {
                             return const SizedBox.shrink();
                           }
@@ -157,17 +171,22 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                         }),
                         _sectionTitle(colors, 'দুর্যোগ পরিস্থিতি', 'Hazards'),
                         SizedBox(height: 10.h),
-                        Obx(() => HazardGrid(
-                          hazards: controller.hazards.toList(),
-                          onTap: (hazard) {
-                            if (hazard.url.isEmpty) return;
-                            final currentLang = Get.find<UserPrefService>().appLanguage;
-                            Get.toNamed(AppRoutes.hazardDetails, arguments: {
-                              'title': hazard.localizedTitle(currentLang),
-                              'url': hazard.url,
-                            });
-                          },
-                        )),
+                        Obx(() {
+                          if (controller.isHazardsLoading.value && controller.hazards.isEmpty) {
+                            return const HazardGridShimmer();
+                          }
+                          return HazardGrid(
+                            hazards: controller.hazards.toList(),
+                            onTap: (hazard) {
+                              if (hazard.url.isEmpty) return;
+                              final currentLang = Get.find<UserPrefService>().appLanguage;
+                              Get.toNamed(AppRoutes.hazardDetails, arguments: {
+                                'title': hazard.localizedTitle(currentLang),
+                                'url': hazard.url,
+                              });
+                            },
+                          );
+                        }),
                       ]),
                     ),
                   ),
@@ -423,8 +442,13 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
       final displayRain =
           liveRainfall.isNotEmpty ? WeatherUtils.roundAndLocalize(liveRainfall) : null;
 
+      final liveIcon = controller.liveWeatherIcon.value;
+      final forecastIcon = current.icon ?? 'N/A';
+      final displayIcon = liveIcon.isNotEmpty ? liveIcon : forecastIcon;
+
       return BaseWeatherCard(
         temp: displayTemp,
+        icon: "${ApiEndpoints.baseIconUrl}/$displayIcon",
         tempMax: currentMaxTemp,
         tempMin: currentMinTemp,
         tempUnit: current.tempUnit ?? '°C',

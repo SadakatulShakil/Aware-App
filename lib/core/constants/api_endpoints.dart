@@ -3,6 +3,7 @@ class ApiEndpoints {
   ApiEndpoints._();
 
   static const baseUrl = 'https://rapid.ddm.gov.bd/api';
+  static const baseIconUrl = 'https://usf.bmd.gov.bd/src/weather_icon';
 
   static const weather = '$baseUrl/weather';
   static const alerts = '$baseUrl/alerts';

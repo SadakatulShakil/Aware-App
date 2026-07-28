@@ -38,6 +38,7 @@ class HomeController extends GetxController {
   // ── Existing AWARE sections (untouched behavior) ──
   final RxList<NotificationModel> notifications = <NotificationModel>[].obs;
   final RxList<HazardEntity> hazards = <HazardEntity>[].obs;
+  final RxBool isHazardsLoading = false.obs;
   final RxBool isNotificationsLoading = false.obs;
   final RxBool notificationsLoadError = false.obs;
 
@@ -60,6 +61,7 @@ class HomeController extends GetxController {
   final RxList<SavedLocation> savedLocations = <SavedLocation>[].obs;
 
   final RxString liveWeatherType = ''.obs; // non-empty overrides forecast type
+  final RxString liveWeatherIcon = ''.obs; // non-empty overrides forecast type
   final RxString liveVideoUrl = ''.obs; // non-empty = show video background
   final RxString liveRainfall = ''.obs;
   final RxString liveTemp = ''.obs;
@@ -163,6 +165,7 @@ class HomeController extends GetxController {
     // for the live API to return.
     liveVideoUrl.value = userService.cachedLiveVideoUrl;
     liveWeatherType.value = userService.cachedLiveWeatherType;
+    liveWeatherIcon.value = userService.cachedLiveWeatherIcon;
 
     // Cached notifications - carousel shows the last-known list instantly;
     // fetchNotifications() replaces this with fresh data in the background.
@@ -297,7 +300,7 @@ class HomeController extends GetxController {
       liveFeelsLike.value = live.feelsLike;
       liveIcon.value = live.icon;
 
-      await userService.cacheLiveWeather(videoUrl: live.videoUrl, type: live.type);
+      await userService.cacheLiveWeather(videoUrl: live.videoUrl, type: live.type, icon: live.icon);
     } catch (_) {
       if (myId != _liveWeatherRequestId) return;
       isLiveWeatherLoading.value = false;
@@ -349,10 +352,13 @@ class HomeController extends GetxController {
   }
 
   Future<void> fetchHazards() async {
+    isHazardsLoading.value = true;
     try {
       hazards.assignAll(await _hazardRepo.getHazards());
     } catch (e) {
       AppLogger.e('fetchHazards failed', e);
+    } finally {
+      isHazardsLoading.value = false;
     }
   }
 
