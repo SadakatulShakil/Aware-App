@@ -7,6 +7,7 @@ import 'package:lottie/lottie.dart' as lottie;
 import '../../../../app/routes/app_routes.dart';
 import '../../../../app/theme/app_fonts.dart';
 import '../../../../app/theme/app_theme_colors.dart';
+import '../../../../core/services/user_pref_service.dart';
 import '../../../../core/utils/convert_utils.dart';
 import '../../../../features/drawer/presentation/widgets/app_drawer.dart';
 import '../../../../shared/widgets/bilingual_label.dart';
@@ -160,8 +161,9 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                           hazards: controller.hazards.toList(),
                           onTap: (hazard) {
                             if (hazard.url.isEmpty) return;
+                            final currentLang = Get.find<UserPrefService>().appLanguage;
                             Get.toNamed(AppRoutes.hazardDetails, arguments: {
-                              'title': hazard.title,
+                              'title': hazard.localizedTitle(currentLang),
                               'url': hazard.url,
                             });
                           },

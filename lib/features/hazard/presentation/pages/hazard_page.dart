@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 
 import '../../../../app/routes/app_routes.dart';
 import '../../../../app/theme/app_theme_colors.dart';
+import '../../../../core/services/user_pref_service.dart';
 import '../../../../shared/widgets/bilingual_label.dart';
 import '../../data/models/hazard_entity.dart';
 import '../controllers/hazard_controller.dart';
@@ -15,8 +16,9 @@ class HazardPage extends GetView<HazardController> {
 
   void _openHazard(HazardEntity hazard) {
     if (hazard.url.isEmpty) return;
+    final currentLang = Get.find<UserPrefService>().appLanguage;
     Get.toNamed(AppRoutes.hazardDetails, arguments: {
-      'title': hazard.title,
+      'title': hazard.localizedTitle(currentLang),
       'url': hazard.url,
     });
   }
@@ -24,6 +26,7 @@ class HazardPage extends GetView<HazardController> {
   @override
   Widget build(BuildContext context) {
     final c = AppThemeColors.of(Theme.of(context).brightness == Brightness.dark);
+    final currentLang = Get.find<UserPrefService>().appLanguage;
 
     return Scaffold(
       backgroundColor: c.scaffoldBg,
@@ -87,7 +90,7 @@ class HazardPage extends GetView<HazardController> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(hazard.title,
+                            Text(hazard.localizedTitle(currentLang),
                                 style: TextStyle(
                                     fontSize: 15.sp,
                                     fontWeight: FontWeight.w600,

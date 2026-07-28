@@ -23,14 +23,14 @@ class HazardRepository {
   Future<List<HazardEntity>> getHazards() async {
     final currentLang = Get.find<UserPrefService>().appLanguage;
     try {
-      return await _fetchAndCache();
+      return await _fetchAndCache(currentLang);
     } catch (e) {
       AppLogger.w('Hazard fetch failed, falling back to cache: $e');
       return _fallbackFromCache(currentLang);
     }
   }
 
-  Future<List<HazardEntity>> _fetchAndCache() async {
+  Future<List<HazardEntity>> _fetchAndCache(String currentLang) async {
     final json = await _api.get(ApiEndpoints.hazardList);
     if (json['status'] != true) throw ApiException.parsing();
 

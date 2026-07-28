@@ -6,6 +6,7 @@ import 'package:get/get.dart';
 import '../../../../app/routes/app_routes.dart';
 import '../../../../app/theme/app_text_styles.dart';
 import '../../../../app/theme/app_theme_colors.dart';
+import '../../../../core/services/user_pref_service.dart';
 import '../../data/models/service_model.dart';
 import '../controllers/service_controller.dart';
 
@@ -14,8 +15,9 @@ class ServicesPage extends GetView<ServiceController> {
 
   void _openService(ServiceModel service) {
     if (service.url.isEmpty) return;
+    final currentLang = Get.find<UserPrefService>().appLanguage;
     Get.toNamed(AppRoutes.hazardDetails, arguments: {
-      'title': service.displayTitle.replaceAll('\n', ' '),
+      'title': service.displayTitle(currentLang).replaceAll('\n', ' '),
       'url': service.url,
     });
   }
@@ -23,6 +25,7 @@ class ServicesPage extends GetView<ServiceController> {
   @override
   Widget build(BuildContext context) {
     final c = AppThemeColors.of(Theme.of(context).brightness == Brightness.dark);
+    final currentLang = Get.find<UserPrefService>().appLanguage;
 
     return Scaffold(
       backgroundColor: c.scaffoldBg,
@@ -78,7 +81,7 @@ class ServicesPage extends GetView<ServiceController> {
                             ),
                       SizedBox(height: 8.h),
                       Text(
-                        service.displayTitle,
+                        service.displayTitle(currentLang),
                         textAlign: TextAlign.center,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,

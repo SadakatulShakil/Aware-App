@@ -1,5 +1,20 @@
 import 'package:floor/floor.dart';
 
+import '../../../../core/utils/lang_text.dart';
+
+/// Local fallback titles keyed by the DDM hazard id - only used by
+/// [HazardEntity.localizedTitle] when the API's title language doesn't
+/// match what was requested (see lang_text.dart).
+const Map<String, LangPair> hazardTitleFallback = {
+  '1': (bn: 'ঘূর্ণিঝড়', en: 'Cyclone'),
+  '2': (bn: 'মৌসুমী বন্যা', en: 'Monsoon Flood'),
+  '3': (bn: 'আকস্মিক বন্যা', en: 'Flash Flood'),
+  '4': (bn: 'বজ্রপাত', en: 'Lightning'),
+  '5': (bn: 'খরা', en: 'Drought'),
+  '6': (bn: 'ভূমিধস', en: 'Landslide'),
+  '7': (bn: 'ভূমিকম্প', en: 'Earthquakes'),
+};
+
 @Entity(tableName: 'hazards')
 class HazardEntity {
   @PrimaryKey()
@@ -35,4 +50,20 @@ class HazardEntity {
         'url': url,
         'updatedAt': updatedAt,
       };
+
+  /// Resolves the title to show for [currentLang] - trusts the (cached) API
+  /// title when its script matches the requested language, otherwise falls
+  /// back to [hazardTitleFallback]. Computed at display time, not cached.
+  String localizedTitle(String currentLang) {
+    final fallback = hazardTitleFallback[id];
+    if (fallback == null) {
+      warnMissingTitleFallback('hazard', id, title, currentLang);
+    }
+    return resolveTitle(
+      apiTitle: title,
+      currentLang: currentLang,
+      mapBn: fallback?.bn,
+      mapEn: fallback?.en,
+    );
+  }
 }

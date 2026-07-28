@@ -1,9 +1,11 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:get/get.dart';
 
 import '../../../../app/theme/app_text_styles.dart';
 import '../../../../app/theme/app_theme_colors.dart';
+import '../../../../core/services/user_pref_service.dart';
 import '../../../hazard/data/models/hazard_entity.dart';
 
 /// 3-col hazard grid, icons + titles sourced from the DDM hazard/list API.
@@ -16,6 +18,7 @@ class HazardGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = AppThemeColors.of(Theme.of(context).brightness == Brightness.dark);
+    final currentLang = Get.find<UserPrefService>().appLanguage;
 
     return GridView.builder(
       shrinkWrap: true,
@@ -69,7 +72,7 @@ class HazardGrid extends StatelessWidget {
                 ),
                 SizedBox(height: 8.h),
                 Text(
-                  hazard.title,
+                  hazard.localizedTitle(currentLang),
                   textAlign: TextAlign.center,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
