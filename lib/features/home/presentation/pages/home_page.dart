@@ -13,6 +13,7 @@ import '../../../../core/utils/convert_utils.dart';
 import '../../../../features/drawer/presentation/widgets/app_drawer.dart';
 import '../../../../shared/widgets/bilingual_label.dart';
 import '../controllers/home_controller.dart';
+import '../widgets/alerts_grid.dart';
 import '../widgets/hazard_grid.dart';
 import '../widgets/header_notification_carousel.dart';
 import '../widgets/home_shimmer.dart';
@@ -165,6 +166,29 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                               SizedBox(height: 10.h),
                               OngoingBulletinCarousel(
                                   bulletins: controller.ongoingBulletins.toList()),
+                              SizedBox(height: 20.h),
+                            ],
+                          );
+                        }),
+                        Obx(() {
+                          if (controller.isAlertsLoading.value && controller.alerts.isEmpty) {
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                _sectionTitle(colors, 'সতর্কতা', 'Alerts'),
+                                SizedBox(height: 10.h),
+                                const AlertsGridShimmer(),
+                                SizedBox(height: 20.h),
+                              ],
+                            );
+                          }
+                          if (controller.alerts.isEmpty) return const SizedBox.shrink();
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _sectionTitle(colors, 'সতর্কতা', 'Alerts'),
+                              SizedBox(height: 10.h),
+                              AlertsGrid(alerts: controller.alerts.toList()),
                               SizedBox(height: 20.h),
                             ],
                           );

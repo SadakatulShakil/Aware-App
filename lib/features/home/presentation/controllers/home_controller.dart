@@ -10,6 +10,7 @@ import '../../../../core/services/user_pref_service.dart';
 import '../../../../core/utils/app_logger.dart';
 import '../../../hazard/data/models/hazard_entity.dart';
 import '../../../hazard/data/repositories/hazard_repository.dart';
+import '../../data/models/alert_item_model.dart';
 import '../../data/models/forecast_model.dart';
 import '../../data/models/notification_model.dart';
 import '../../data/models/ongoing_bulletin_model.dart';
@@ -45,6 +46,9 @@ class HomeController extends GetxController {
   final RxList<OngoingBulletinModel> ongoingBulletins = <OngoingBulletinModel>[].obs;
   final RxBool isOngoingBulletinsLoading = false.obs;
 
+  final RxList<AlertItemModel> alerts = <AlertItemModel>[].obs;
+  final RxBool isAlertsLoading = false.obs;
+
   // ── Weather / location state (ported from BMD HomeController) ──
   final RxBool isLoaded = false.obs;
   final RxBool isForecastLoading = false.obs;
@@ -66,7 +70,6 @@ class HomeController extends GetxController {
   final RxString liveRainfall = ''.obs;
   final RxString liveTemp = ''.obs;
   final RxString liveFeelsLike = ''.obs;
-  final RxString liveIcon = ''.obs;
   int _liveWeatherRequestId = 0;
 
   final RxBool locationPermissionGranted = true.obs;
@@ -183,6 +186,7 @@ class HomeController extends GetxController {
         if (hasCoords) fetchLiveWeather(lat.value, lon.value),
         fetchNotifications(),
         fetchOngoingBulletins(),
+        fetchAlerts(),
         fetchHazards(),
       ]);
     });
@@ -298,7 +302,7 @@ class HomeController extends GetxController {
       liveRainfall.value = live.rainfall;
       liveTemp.value = live.temp;
       liveFeelsLike.value = live.feelsLike;
-      liveIcon.value = live.icon;
+      liveWeatherIcon.value = live.icon;
 
       await userService.cacheLiveWeather(videoUrl: live.videoUrl, type: live.type, icon: live.icon);
     } catch (_) {
@@ -362,12 +366,25 @@ class HomeController extends GetxController {
     }
   }
 
+  Future<void> fetchAlerts() async {
+    isAlertsLoading.value = true;
+    try {
+      alerts.assignAll(await _homeRepo.getAlerts());
+    } catch (e) {
+      // Keep whatever is currently displayed on failure.
+      AppLogger.e('fetchAlerts failed', e);
+    } finally {
+      isAlertsLoading.value = false;
+    }
+  }
+
   Future<void> onRefresh() async {
     await Future.wait([
       if (lat.value.isNotEmpty) getForecast(lat.value, lon.value),
       if (lat.value.isNotEmpty) fetchLiveWeather(lat.value, lon.value),
       fetchNotifications(),
       fetchOngoingBulletins(),
+      fetchAlerts(),
       fetchHazards(),
     ]);
   }
@@ -758,7 +775,7 @@ class HomeController extends GetxController {
       liveRainfall.value = '';
       liveTemp.value = '';
       liveFeelsLike.value = '';
-      liveIcon.value = '';
+      liveWeatherIcon.value = '';
       await userService.clearLiveWeatherCache();
 
       await getSharedPrefData();

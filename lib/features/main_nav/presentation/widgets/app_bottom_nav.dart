@@ -41,12 +41,12 @@ class AppBottomNav extends GetView<MainNavController> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(selected ? activeIcon : icon,
-                size: 24.sp,
+                size: selected ? 24.sp : 20.sp,
                 color: selected ? c.primary : c.textSecondary),
             SizedBox(height: 2.h),
             Text(labelKey.tr,
                 style: TextStyle(
-                    fontSize: 10.sp,
+                    fontSize: selected ? 15.sp : 12.sp,
                     fontWeight:
                         selected ? FontWeight.w600 : FontWeight.w400,
                     color: selected ? c.primary : c.textSecondary)),
