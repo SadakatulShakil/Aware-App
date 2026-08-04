@@ -13,42 +13,28 @@ class HomeRepository {
 
   HomeRepository(this._api);
 
+  /// DDM's notification list API
   Future<List<NotificationModel>> getNotifications() async {
-    final json = await _api.get(ApiEndpoints.bmdNotificationList);
+    final json = await _api.get(ApiEndpoints.notificationList);
     final response = NotificationListResponse.fromJson(json);
     final items = response.result?.notification ?? [];
     return items.where((n) => n.isActive).map(_toNotification).toList();
   }
 
+  /// DDM's bulletin API
   Future<List<OngoingBulletinModel>> getOngoingBulletins() async {
     final json = await _api.get(ApiEndpoints.alertOngoing);
     return OngoingBulletinModel.listFromJson(json);
   }
 
+  /// DDM's alert current API
   Future<List<AlertItemModel>> getAlerts() async {
-    // ===== DEMO DATA - remove once the /alerts API is ready =====
-    // Delete this line and the `_demoAlerts` field below, then uncomment
-    // the two real-API lines underneath.
-    return AlertItemModel.listFromJson(_demoAlerts);
-    // ===== END DEMO DATA =====
 
-    // final json = await _api.get(ApiEndpoints.alerts);
-    // return AlertItemModel.listFromJson(json['result']);
+    final json = await _api.get(ApiEndpoints.alerts);
+    return AlertItemModel.listFromJson(json['result']);
   }
 
-  // ===== DEMO DATA - remove once the /alerts API is ready =====
-  static const _demoAlerts = [
-    {'id': '1', 'title': 'Alert1', 'value': '8', 'color': '#E53935'},
-    {'id': '2', 'title': 'Alert2', 'value': '3', 'color': '#1E88E5'},
-    {'id': '3', 'title': 'Alert3', 'value': '4', 'color': '#43A047'},
-    {'id': '4', 'title': 'Alert4', 'value': '3', 'color': '#FB8C00'},
-    {'id': '5', 'title': 'Alert5', 'value': '1', 'color': '#8E24AA'},
-    {'id': '6', 'title': 'Alert6', 'value': '6', 'color': '#00897B'},
-    {'id': '7', 'title': 'Alert7', 'value': '2', 'color': '#C0CA33'},
-    {'id': '8', 'title': 'Alert8', 'value': '9', 'color': '#6D4C41'},
-  ];
-  // ===== END DEMO DATA =====
-
+  /// DDM's NotificationItem .
   NotificationModel _toNotification(NotificationItem n) {
     final title = n.title ?? '';
     return NotificationModel(

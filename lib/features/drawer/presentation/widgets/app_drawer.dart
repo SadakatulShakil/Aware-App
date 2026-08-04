@@ -60,10 +60,10 @@ class AppDrawer extends StatelessWidget {
               children: [
                 Text('AWARE', style: AppTextStyles.sectionTitle(c.textPrimary)),
                 SizedBox(height: 2.h),
-                Text('app_owner'.tr,
+                Text('aware_full_name'.tr,
                     style: AppTextStyles.caption(c.textPrimary)
                 ),
-                Text('aware_full_name'.tr,
+                Text('app_owner'.tr,
                     style: AppTextStyles.caption(c.textPrimary)
                 ),
               ],

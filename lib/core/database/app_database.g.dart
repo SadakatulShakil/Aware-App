@@ -74,6 +74,8 @@ class _$AppDatabase extends AppDatabase {
 
   HazardDao? _hazardDaoInstance;
 
+  OngoingHazardDao? _onGoingHazardDaoInstance;
+
   CacheDao? _cacheDaoInstance;
 
   ServiceDao? _serviceDaoInstance;
@@ -84,7 +86,7 @@ class _$AppDatabase extends AppDatabase {
     Callback? callback,
   ]) async {
     final databaseOptions = sqflite.OpenDatabaseOptions(
-      version: 5,
+      version: 6,
       onConfigure: (database) async {
         await database.execute('PRAGMA foreign_keys = ON');
         await callback?.onConfigure?.call(database);
@@ -102,6 +104,8 @@ class _$AppDatabase extends AppDatabase {
         await database.execute(
             'CREATE TABLE IF NOT EXISTS `hazards` (`id` TEXT NOT NULL, `title` TEXT NOT NULL, `iconUrl` TEXT NOT NULL, `url` TEXT NOT NULL, `updatedAt` INTEGER NOT NULL, PRIMARY KEY (`id`))');
         await database.execute(
+            'CREATE TABLE IF NOT EXISTS `ongoing_hazards` (`id` TEXT NOT NULL, `title` TEXT NOT NULL, `iconUrl` TEXT NOT NULL, `url` TEXT NOT NULL, `updatedAt` INTEGER NOT NULL, PRIMARY KEY (`id`))');
+        await database.execute(
             'CREATE TABLE IF NOT EXISTS `cache` (`key` TEXT NOT NULL, `jsonData` TEXT NOT NULL, `timestamp` INTEGER NOT NULL, PRIMARY KEY (`key`))');
         await database.execute(
             'CREATE TABLE IF NOT EXISTS `services` (`id` TEXT NOT NULL, `title` TEXT NOT NULL, `iconUrl` TEXT NOT NULL, `url` TEXT NOT NULL, `updatedAt` INTEGER NOT NULL, PRIMARY KEY (`id`))');
@@ -115,6 +119,12 @@ class _$AppDatabase extends AppDatabase {
   @override
   HazardDao get hazardDao {
     return _hazardDaoInstance ??= _$HazardDao(database, changeListener);
+  }
+
+  @override
+  OngoingHazardDao get onGoingHazardDao {
+    return _onGoingHazardDaoInstance ??=
+        _$OngoingHazardDao(database, changeListener);
   }
 
   @override
@@ -171,6 +181,55 @@ class _$HazardDao extends HazardDao {
   @override
   Future<void> insertAll(List<HazardEntity> hazards) async {
     await _hazardEntityInsertionAdapter.insertList(
+        hazards, OnConflictStrategy.replace);
+  }
+}
+
+class _$OngoingHazardDao extends OngoingHazardDao {
+  _$OngoingHazardDao(
+    this.database,
+    this.changeListener,
+  )   : _queryAdapter = QueryAdapter(database),
+        _ongoingHazardEntityInsertionAdapter = InsertionAdapter(
+            database,
+            'ongoing_hazards',
+            (OngoingHazardEntity item) => <String, Object?>{
+                  'id': item.id,
+                  'title': item.title,
+                  'iconUrl': item.iconUrl,
+                  'url': item.url,
+                  'updatedAt': item.updatedAt
+                });
+
+  final sqflite.DatabaseExecutor database;
+
+  final StreamController<String> changeListener;
+
+  final QueryAdapter _queryAdapter;
+
+  final InsertionAdapter<OngoingHazardEntity>
+      _ongoingHazardEntityInsertionAdapter;
+
+  @override
+  Future<List<OngoingHazardEntity>> findAll() async {
+    return _queryAdapter.queryList(
+        'SELECT * FROM ongoing_hazards ORDER BY id ASC',
+        mapper: (Map<String, Object?> row) => OngoingHazardEntity(
+            id: row['id'] as String,
+            title: row['title'] as String,
+            iconUrl: row['iconUrl'] as String,
+            url: row['url'] as String,
+            updatedAt: row['updatedAt'] as int));
+  }
+
+  @override
+  Future<void> clearAll() async {
+    await _queryAdapter.queryNoReturn('DELETE FROM ongoing_hazards');
+  }
+
+  @override
+  Future<void> insertAll(List<OngoingHazardEntity> hazards) async {
+    await _ongoingHazardEntityInsertionAdapter.insertList(
         hazards, OnConflictStrategy.replace);
   }
 }

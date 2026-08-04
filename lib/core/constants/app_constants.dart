@@ -2,9 +2,11 @@ class AppConstants {
   AppConstants._();
 
   static const appName = 'AWARE';
+  static const langBn = 'bn';
   static const appFullName =
       'Advanced Warning & Analytics for Risk & Emergencies';
   static const orgName = 'Department of Disaster Management (DDM), MoDMR';
+  static const orgNameBn = 'দুর্যোগ ব্যবস্থাপনা অধিদপ্তর (ডিডিএম), মন্ত্রণালয়';
   static const appVersion = '1.0.0';
   static const website = 'https://ddm.gov.bd';
   static const supportEmail = 'info@ddm.gov.bd';

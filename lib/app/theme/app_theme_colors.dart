@@ -24,6 +24,8 @@ class AppThemeColors {
   // ---- Text ----
   Color get textPrimary =>
       isDark ? Colors.white : const Color(0xFF1A1A2E);
+  Color get textAlert =>
+      const Color(0xFF1A1A2E);
   Color get textSecondary =>
       isDark ? Colors.white70 : const Color(0xFF5A6472);
   Color get textOnPrimary => Colors.white;
@@ -64,9 +66,7 @@ class AppThemeColors {
   Color get scaffoldGradientTop => scaffoldBg;
   Color get scaffoldGradientBottom => scaffoldBg;
 
-  List<Color> get headerGradientColors => isDark
-      ? const [Color(0x8C1B4871), Color(0x592997E2), Color(0xB316426A)]
-      : const [Color(0x2EFFFFFF), Color(0x1EFFFFFF), Color(0x6BFFFFFF)];
+  List<Color> get headerGradientColors => const [Color(0x8C1B4871), Color(0x592997E2), Color(0xB316426A)];
 
   List<double> get headerGradientStops =>
       isDark ? const [0.0, 0.47, 1.0] : const [0.0, 0.40, 1.0];

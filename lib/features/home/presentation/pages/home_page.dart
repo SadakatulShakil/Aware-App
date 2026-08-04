@@ -59,8 +59,8 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
 
   void _onScroll() {
     final statusBarHeight = MediaQuery.of(context).padding.top;
-    final carouselHeight = controller.notifications.isNotEmpty ? 56.h : 0.h;
-    final maxExtent = 215.h + carouselHeight + statusBarHeight;
+    final carouselHeight = controller.notifications.isNotEmpty ? 64.h : 0.h;
+    final maxExtent = 236.h + carouselHeight + statusBarHeight;
     final minExtent = 56.h + statusBarHeight;
     final t = (_scrollController.offset / (maxExtent - minExtent)).clamp(0.0, 1.0);
     final collapsed = t > 0.6;
@@ -126,11 +126,10 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                     pinned: true,
                     delegate: _WeatherHeaderDelegate(
                       statusBarHeight: statusBarHeight,
-                      background: _buildHeaderBackground(isNight),
                       colors: colors,
                       hasCarousel: controller.notifications.isNotEmpty,
-                      pinnedRowBuilder: (t) => _buildPinnedRow(t, colors),
-                      fullContentBuilder: () => _buildFullHeaderContent(colors),
+                      contentBuilder: (t) =>
+                          _buildHeaderContent(t, isNight, colors, statusBarHeight),
                     ),
                   ),
                   SliverToBoxAdapter(child: _buildLocationBanner(colors)),
@@ -200,7 +199,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                             return const HazardGridShimmer();
                           }
                           return HazardGrid(
-                            hazards: controller.hazards.toList(),
+                            hazards: controller.onGoingHazards.toList(),
                             onTap: (hazard) {
                               if (hazard.url.isEmpty) return;
                               final currentLang = Get.find<UserPrefService>().appLanguage;
@@ -227,11 +226,115 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   // HEADER
   // ─────────────────────────────────────────────────────────────────────
 
+  /// One floating rounded card holds everything: the video/photo
+  /// background, the location/menu/notification row, and the weather
+  /// info - the notification ticker sits just below it, fading with it.
+  /// The card's background runs all the way to the very top of the
+  /// screen (behind the transparent status bar) so there's no seam
+  /// between the status bar and the card - only the interactive content
+  /// (pinned row) is inset below the status bar icons.
+  Widget _buildHeaderContent(
+      double t, bool isNight, AppThemeColors colors, double statusBarHeight) {
+    final fadeOpacity = (1.0 - t * 1.6).clamp(0.0, 1.0);
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _buildHeaderCard(t, isNight, colors, fadeOpacity, statusBarHeight),
+        Opacity(
+          opacity: fadeOpacity,
+          child: IgnorePointer(
+            ignoring: t > 0.5,
+            child: _buildCarouselAlert(),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildHeaderCard(double t, bool isNight, AppThemeColors colors, double fadeOpacity,
+      double statusBarHeight) {
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.only(
+          bottomLeft: Radius.circular(26.r),
+          bottomRight: Radius.circular(26.r),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.22),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.only(
+          bottomLeft: Radius.circular(26.r),
+          bottomRight: Radius.circular(26.r),
+        ),
+        child: Obx(() {
+          // Live weather video is the star once it's actually playing -
+          // drop the decorative glass tint/chips so it isn't dulled by
+          // an overlay; fall back to the glass look for the static
+          // day/night photo (or while the live video is still loading).
+          final videoLive =
+              controller.liveVideoUrl.value.isNotEmpty && _videoReady.value;
+          final useGlass = controller.liveWeatherType.value.isEmpty || !videoLive;
+
+          return Stack(
+            children: [
+              Positioned.fill(child: _buildHeaderBackground(isNight)),
+              if (useGlass)
+                Positioned.fill(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: colors.headerGradientColors,
+                        stops: colors.headerGradientStops,
+                      ),
+                    ),
+                  ),
+                ),
+              Positioned.fill(
+                child: IgnorePointer(
+                  child: Container(
+                    color: colors.scaffoldGradientTop.withOpacity((t * 1.1).clamp(0.0, 1.0)),
+                  ),
+                ),
+              ),
+              Padding(
+                padding: EdgeInsets.only(top: statusBarHeight),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _buildPinnedRow(t, colors, useGlass: useGlass),
+                    Opacity(
+                      opacity: fadeOpacity,
+                      child: IgnorePointer(
+                        ignoring: t > 0.5,
+                        child: _buildFullHeaderContent(colors),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          );
+        }),
+      ),
+    );
+  }
+
   Widget _buildHeaderBackground(bool isNight) {
     return Obx(() {
       final videoUrl = controller.liveVideoUrl.value;
       final hasVideo = videoUrl.isNotEmpty;
       final videoVisible = hasVideo && _videoReady.value;
+      final glassBg = videoVisible
+          ? Colors.transparent
+          : (isNight ? Colors.black.withOpacity(0.55) : Colors.black.withOpacity(0.72));
 
       if (!hasVideo && _videoReady.value) {
         WidgetsBinding.instance.addPostFrameCallback((_) => _videoReady.value = false);
@@ -239,12 +342,12 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
 
       return Stack(
         children: [
-          Positioned.fill(
-            child: Image.asset(
-              isNight ? 'assets/night.jpg' : 'assets/day.jpg',
-              fit: BoxFit.cover,
-            ),
-          ),
+          // Positioned.fill(
+          //   child: Image.asset(
+          //     isNight ? 'assets/night.jpg' : 'assets/day.jpg',
+          //     fit: BoxFit.cover,
+          //   ),
+          // ),
           if (hasVideo)
             Positioned.fill(
               child: WeatherVideoBackground(
@@ -258,22 +361,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 350),
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: videoVisible
-                        ? [
-                            Colors.black.withOpacity(0.50),
-                            Colors.black.withOpacity(0.15),
-                            Colors.black.withOpacity(0.20),
-                          ]
-                        : [
-                            Colors.black.withOpacity(isNight ? 0.55 : 0.72),
-                            Colors.black.withOpacity(isNight ? 0.25 : 0.42),
-                            Colors.black.withOpacity(isNight ? 0.65 : 0.78),
-                          ],
-                    stops: const [0.0, 0.45, 1.0],
-                  ),
+                  color: glassBg,
                 ),
               ),
             ),
@@ -283,10 +371,13 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     });
   }
 
-  Widget _buildPinnedRow(double t, AppThemeColors colors) {
-    final fontSize = 18.sp - (18.sp - 16.sp) * t;
+  Widget _buildPinnedRow(double t, AppThemeColors colors, {required bool useGlass}) {
+    final fontSize = 16.sp - (16.sp - 14.sp) * t;
     final titleColor = Color.lerp(colors.headerText, colors.textPrimary, t)!;
     final subtitleColor = Color.lerp(colors.headerSecondaryText, colors.textSecondary, t)!;
+    final glassBg = useGlass
+        ? Color.lerp(Colors.white.withOpacity(0.16), colors.primary.withOpacity(0.10), t)!
+        : Colors.transparent;
 
     return SizedBox(
       height: 56.h,
@@ -296,41 +387,46 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
           Center(
             child: GestureDetector(
               onTap: controller.openLocationSelector,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Obx(() {
-                    final name = controller.currentLocationName.value;
-                    if (name.isEmpty) return const SizedBox.shrink();
-                    return Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        ConstrainedBox(
-                          constraints: BoxConstraints(maxWidth: 220.w),
-                          child: Text(
-                            name,
-                            overflow: TextOverflow.ellipsis,
-                            style: AppFonts.style(
-                                fontSize: fontSize, color: titleColor, fontWeight: FontWeight.w600),
+              child: Container(
+                padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 6.h),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Obx(() {
+                      final name = controller.currentLocationName.value;
+                      if (name.isEmpty) return const SizedBox.shrink();
+                      return Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.location_on_rounded, color: titleColor, size: 14.r),
+                          SizedBox(width: 4.w),
+                          ConstrainedBox(
+                            constraints: BoxConstraints(maxWidth: 190.w),
+                            child: Text(
+                              name,
+                              overflow: TextOverflow.ellipsis,
+                              style: AppFonts.style(
+                                  fontSize: fontSize, color: titleColor, fontWeight: FontWeight.w600),
+                            ),
                           ),
-                        ),
-                        Icon(Icons.keyboard_arrow_down, color: titleColor, size: 20.r),
-                      ],
-                    );
-                  }),
-                  Obx(() {
-                    final current = controller.forecast.value?.result?.current;
-                    final weekday = current?.weekday ?? '';
-                    final date = current?.date ?? '';
-                    // Same "empty comma" problem as the name row above -
-                    // don't show ", " before there's actually a date.
-                    if (weekday.isEmpty && date.isEmpty) return const SizedBox.shrink();
-                    return Text(
-                      "$weekday, $date",
-                      style: AppFonts.style(fontSize: 11.sp, color: subtitleColor),
-                    );
-                  }),
-                ],
+                          Icon(Icons.keyboard_arrow_down, color: titleColor, size: 16.r),
+                        ],
+                      );
+                    }),
+                    Obx(() {
+                      final current = controller.forecast.value?.result?.current;
+                      final weekday = current?.weekday ?? '';
+                      final date = current?.date ?? '';
+                      // Same "empty comma" problem as the name row above -
+                      // don't show ", " before there's actually a date.
+                      if (weekday.isEmpty && date.isEmpty) return const SizedBox.shrink();
+                      return Text(
+                        "$weekday, $date",
+                        style: AppFonts.style(fontSize: 11.sp, color: subtitleColor),
+                      );
+                    }),
+                  ],
+                ),
               ),
             ),
           ),
@@ -339,17 +435,11 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
             top: 0,
             bottom: 0,
             child: Center(
-              child: GestureDetector(
+              child: _glassIconButton(
+                icon: Icons.menu_rounded,
+                iconColor: titleColor,
+                background: glassBg,
                 onTap: () => _scaffoldKey.currentState?.openDrawer(),
-                child: Container(
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF1B5E9E),
-                      borderRadius: BorderRadius.circular(10.r),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(6.0),
-                      child: Icon(Icons.menu, color: titleColor, size: 20.r),
-                    )),
               ),
             ),
           ),
@@ -358,17 +448,13 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
             top: 0,
             bottom: 0,
             child: Center(
-              child: GestureDetector(
-                onTap: () => Get.toNamed(AppRoutes.notifications),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF1B5E9E),
-                      borderRadius: BorderRadius.circular(20.r),
-                    ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Icon(Icons.notifications_active_outlined, color: titleColor, size: 20.r),
-                      )))
+              child: Obx(() => _glassIconButton(
+                    icon: Icons.notifications_rounded,
+                    iconColor: titleColor,
+                    background: glassBg,
+                    showBadge: controller.notifications.isNotEmpty,
+                    onTap: () => Get.toNamed(AppRoutes.notifications),
+                  )),
             ),
           ),
         ],
@@ -376,53 +462,90 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     );
   }
 
-  Widget _buildFullHeaderContent(AppThemeColors colors) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Obx(() {
-          if (controller.isLocationSwitching.value) {
-            return _buildLocationSwitchingLoader();
-          }
-          if (controller.forecast.value != null) {
-            if (controller.isLiveWeatherLoading.value) {
-              return Stack(
-                children: [
-                  _buildWeatherCard(),
-                  Positioned(
-                    top: 8.h,
-                    right: 8.w,
-                    child: SizedBox(
-                      width: 30.r,
-                      height: 30.r,
-                      child: lottie.Lottie.asset('assets/json/loading_anim.json', repeat: true),
-                    ),
-                  ),
-                ],
-              );
-            }
-            return _buildWeatherCard();
-          }
-          // does not - without it the no-data card could flash while that
-          // fetch is still in flight.
-          final stillResolving = controller.isForecastLoading.value ||
-              controller.isLocationUpdating.value ||
-              (controller.lat.value.isEmpty && controller.isSyncingLocation.value);
-          if (stillResolving) {
-            return _buildHeaderLoading(controller.lat.value.isEmpty);
-          }
-          return _buildNoDataCard();
-        }),
-        _buildCarouselAlert(),
-      ],
+  Widget _glassIconButton({
+    required IconData icon,
+    required Color iconColor,
+    required Color background,
+    required VoidCallback onTap,
+    bool showBadge = false,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Container(
+            width: 38.r,
+            height: 38.r,
+            decoration: BoxDecoration(
+              color: background,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: iconColor, size: 20.r),
+          ),
+          if (showBadge)
+            Positioned(
+              top: -1,
+              right: -1,
+              child: Container(
+                width: 10.r,
+                height: 10.r,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE53935),
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.white, width: 1.5),
+                ),
+              ),
+            ),
+        ],
+      ),
     );
+  }
+
+  Widget _buildFullHeaderContent(AppThemeColors colors) {
+    return Obx(() {
+      if (controller.isLocationSwitching.value) {
+        return _buildLocationSwitchingLoader();
+      }
+      if (controller.forecast.value != null) {
+        if (controller.isLiveWeatherLoading.value) {
+          return Stack(
+            children: [
+              _buildWeatherCard(),
+              Positioned(
+                top: 8.h,
+                right: 8.w,
+                child: SizedBox(
+                  width: 30.r,
+                  height: 30.r,
+                  child: lottie.Lottie.asset('assets/json/loading_anim.json', repeat: true),
+                ),
+              ),
+            ],
+          );
+        }
+        return _buildWeatherCard();
+      }
+      // does not - without it the no-data card could flash while that
+      // fetch is still in flight.
+      final stillResolving = controller.isForecastLoading.value ||
+          controller.isLocationUpdating.value ||
+          (controller.lat.value.isEmpty && controller.isSyncingLocation.value);
+      if (stillResolving) {
+        return _buildHeaderLoading(controller.lat.value.isEmpty);
+      }
+      return _buildNoDataCard();
+    });
   }
 
   Widget _buildCarouselAlert() {
     return Obx(() {
       final notifications = controller.notifications;
       if (notifications.isEmpty) return const SizedBox.shrink();
-      return HeaderNotificationCarousel(notifications: notifications.toList());
+      return Padding(
+        padding: EdgeInsets.only(top: 10.h),
+        child: HeaderNotificationCarousel(notifications: notifications.toList()),
+      );
     });
   }
 
@@ -651,25 +774,21 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
 
 class _WeatherHeaderDelegate extends SliverPersistentHeaderDelegate {
   final double statusBarHeight;
-  final Widget background;
   final AppThemeColors colors;
-  final Widget Function(double t) pinnedRowBuilder;
-  final Widget Function() fullContentBuilder;
+  final Widget Function(double t) contentBuilder;
   final bool hasCarousel;
 
   _WeatherHeaderDelegate({
     required this.statusBarHeight,
-    required this.background,
     required this.colors,
-    required this.pinnedRowBuilder,
-    required this.fullContentBuilder,
+    required this.contentBuilder,
     required this.hasCarousel,
   });
 
   @override
   double get maxExtent {
-    final carouselHeight = hasCarousel ? 56.h : 0.h;
-    return 215.h + carouselHeight + statusBarHeight;
+    final carouselHeight = hasCarousel ? 64.h : 0.h;
+    return 236.h + carouselHeight + statusBarHeight;
   }
 
   @override
@@ -678,80 +797,26 @@ class _WeatherHeaderDelegate extends SliverPersistentHeaderDelegate {
   @override
   Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
     final t = (shrinkOffset / (maxExtent - minExtent)).clamp(0.0, 1.0);
-    final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return Stack(
-      clipBehavior: Clip.hardEdge,
-      children: [
-        Positioned.fill(child: background),
-        Positioned.fill(
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: colors.headerGradientColors,
-                stops: colors.headerGradientStops,
-              ),
-            ),
+    return Container(
+      color: colors.scaffoldBg,
+      child: Stack(
+        clipBehavior: Clip.hardEdge,
+        children: [
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: contentBuilder(t),
           ),
-        ),
-        Positioned.fill(
-          child: IgnorePointer(
-            child: Container(
-              color: colors.scaffoldGradientTop.withOpacity((t * 1.1).clamp(0.0, 1.0)),
-            ),
-          ),
-        ),
-        Positioned(
-          left: 0,
-          right: 0,
-          bottom: 0,
-          height: 48.h,
-          child: IgnorePointer(
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    colors.scaffoldBg.withOpacity(0.001),
-                    colors.scaffoldBg.withOpacity(isDark ? 1.0 : 0.88),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
-        Positioned(
-          top: statusBarHeight,
-          left: 0,
-          right: 0,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              pinnedRowBuilder(t),
-              Opacity(
-                opacity: (1.0 - t * 1.6).clamp(0.0, 1.0),
-                child: IgnorePointer(
-                  ignoring: t > 0.5,
-                  child: Transform.translate(
-                    offset: Offset(0, -shrinkOffset * 0.5),
-                    child: fullContentBuilder(),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
   @override
   bool shouldRebuild(covariant _WeatherHeaderDelegate oldDelegate) {
     return statusBarHeight != oldDelegate.statusBarHeight ||
-        background != oldDelegate.background ||
         colors != oldDelegate.colors ||
         hasCarousel != oldDelegate.hasCarousel;
   }

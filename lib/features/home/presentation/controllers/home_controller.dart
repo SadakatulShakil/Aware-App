@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:aware/features/hazard/data/models/ongoing_hazard_entity.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
@@ -39,7 +40,9 @@ class HomeController extends GetxController {
   // ── Existing AWARE sections (untouched behavior) ──
   final RxList<NotificationModel> notifications = <NotificationModel>[].obs;
   final RxList<HazardEntity> hazards = <HazardEntity>[].obs;
+  final RxList<OngoingHazardEntity> onGoingHazards = <OngoingHazardEntity>[].obs;
   final RxBool isHazardsLoading = false.obs;
+  final RxBool isOngoingHazardsLoading = false.obs;
   final RxBool isNotificationsLoading = false.obs;
   final RxBool notificationsLoadError = false.obs;
 
@@ -188,6 +191,7 @@ class HomeController extends GetxController {
         fetchOngoingBulletins(),
         fetchAlerts(),
         fetchHazards(),
+        fetchOngoingHazards(),
       ]);
     });
     // Fire-and-forget, after the UI is stable - gives lat/lon time to
@@ -366,6 +370,18 @@ class HomeController extends GetxController {
     }
   }
 
+  Future<void> fetchOngoingHazards() async {
+    isOngoingHazardsLoading.value = true;
+    try {
+      onGoingHazards.assignAll(await _hazardRepo.getOngoingHazards());
+      print('hazard_check2: ${onGoingHazards.map((e) => e.iconUrl).toList()}');
+    } catch (e) {
+      AppLogger.e('fetchHazards failed', e);
+    } finally {
+      isOngoingHazardsLoading.value = false;
+    }
+  }
+
   Future<void> fetchAlerts() async {
     isAlertsLoading.value = true;
     try {
@@ -386,6 +402,7 @@ class HomeController extends GetxController {
       fetchOngoingBulletins(),
       fetchAlerts(),
       fetchHazards(),
+      fetchOngoingHazards(),
     ]);
   }
 

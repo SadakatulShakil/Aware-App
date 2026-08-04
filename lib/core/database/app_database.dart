@@ -4,7 +4,9 @@ import 'package:floor/floor.dart';
 import 'package:sqflite/sqflite.dart' as sqflite;
 
 import '../../features/hazard/data/datasources/hazard_dao.dart';
+import '../../features/hazard/data/datasources/ongoing_hazard_dao.dart';
 import '../../features/hazard/data/models/hazard_entity.dart';
+import '../../features/hazard/data/models/ongoing_hazard_entity.dart';
 import '../../features/services/data/datasources/service_dao.dart';
 import '../../features/services/data/models/service_model.dart';
 import 'cache_dao.dart';
@@ -46,11 +48,21 @@ final dropLangColumnMigrationV4ToV5 = Migration(4, 5, (database) async {
       'CREATE TABLE IF NOT EXISTS `services` (`id` TEXT NOT NULL, `title` TEXT NOT NULL, `iconUrl` TEXT NOT NULL, `url` TEXT NOT NULL, `updatedAt` INTEGER NOT NULL, PRIMARY KEY (`id`))');
 });
 
+/// v5 -> v6: drops the `ongoing_hazards` table - it was never used, and the
+/// re-fetched from the API (which already responds in the requested
+
+final ongoingHazardsMigrationV5ToV6 = Migration(5, 6, (database) async {
+  await database.execute('DROP TABLE IF EXISTS `ongoing_hazards`');
+  await database.execute(
+      'CREATE TABLE IF NOT EXISTS `ongoing_hazards` (`id` TEXT NOT NULL, `title` TEXT NOT NULL, `iconUrl` TEXT NOT NULL, `url` TEXT NOT NULL, `lang` TEXT NOT NULL, `updatedAt` INTEGER NOT NULL, PRIMARY KEY (`id`))');
+});
+
 /// Run once after pub get:
 ///   dart run build_runner build --delete-conflicting-outputs
-@Database(version: 5, entities: [HazardEntity, CacheEntity, ServiceModel])
+@Database(version: 6, entities: [HazardEntity, OngoingHazardEntity, CacheEntity, ServiceModel])
 abstract class AppDatabase extends FloorDatabase {
   HazardDao get hazardDao;
+  OngoingHazardDao get onGoingHazardDao;
   CacheDao get cacheDao;
   ServiceDao get serviceDao;
 }

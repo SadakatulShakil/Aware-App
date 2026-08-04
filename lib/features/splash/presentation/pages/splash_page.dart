@@ -13,6 +13,8 @@ class SplashPage extends GetView<SplashController> {
   @override
   Widget build(BuildContext context) {
     final c = AppThemeColors.of(Theme.of(context).brightness == Brightness.dark);
+    final langCode = Get.locale?.languageCode ?? AppConstants.langBn;
+    print('lang_code: $langCode');
     return Scaffold(
       body: Container(
         width: double.infinity,
@@ -64,7 +66,7 @@ class SplashPage extends GetView<SplashController> {
               Obx(() => Text(controller.statusText.value,
                   style: AppTextStyles.caption(Colors.white70))),
               SizedBox(height: 28.h),
-              Text(AppConstants.orgName,
+              Text(langCode ==  AppConstants.langBn ? AppConstants.orgNameBn : AppConstants.orgName,
                   style: AppTextStyles.caption(Colors.white60)),
               SizedBox(height: 16.h),
             ],

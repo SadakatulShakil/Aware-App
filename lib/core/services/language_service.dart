@@ -50,6 +50,9 @@ class LanguageService extends GetxService {
       home.fetchNotifications(),
       home.fetchOngoingBulletins(),
       home.fetchHazards(),
+      home.fetchOngoingHazards(),
+      home.fetchAlerts(),
+      home.fetchNotifications()
     ];
     if (home.lat.value.isNotEmpty) {
       refreshes.add(home.getForecast(home.lat.value, home.lon.value));

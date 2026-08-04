@@ -22,7 +22,6 @@ class ApiClient {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
         'Accept-Language': Get.find<UserPrefService>().appLanguage,
-        // Add auth / api-key headers here in ONE place when backend requires.
       };
 
   Future<dynamic> get(String url,
@@ -43,6 +42,7 @@ class ApiClient {
 
   Future<dynamic> post(String url, {Map<String, dynamic>? body}) async {
     AppLogger.d('POST $url');
+    print('POST details:  $url body: ${jsonEncode(body)}, headers: ${_headers()}');
     try {
       final res = await http
           .post(Uri.parse(url), headers: _headers(), body: jsonEncode(body))
@@ -57,6 +57,7 @@ class ApiClient {
 
   dynamic _process(http.Response res) {
     AppLogger.d('<- ${res.statusCode} ${res.request?.url.path}');
+    print('Response details: statusCode: ${res.request?.url.path} ${res.statusCode}, body: ${res.body} headers: ${res.headers}');
     if (res.statusCode >= 200 && res.statusCode < 300) {
       if (res.body.isEmpty) return <String, dynamic>{};
       try {

@@ -1,3 +1,4 @@
+import 'package:aware/features/hazard/data/models/ongoing_hazard_entity.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -10,8 +11,8 @@ import '../../../hazard/data/models/hazard_entity.dart';
 
 /// 3-col hazard grid, icons + titles sourced from the DDM hazard/list API.
 class HazardGrid extends StatelessWidget {
-  final List<HazardEntity> hazards;
-  final void Function(HazardEntity hazard)? onTap;
+  final List<OngoingHazardEntity> hazards;
+  final void Function(OngoingHazardEntity hazard)? onTap;
 
   const HazardGrid({super.key, required this.hazards, this.onTap});
 
@@ -33,6 +34,7 @@ class HazardGrid extends StatelessWidget {
       itemCount: hazards.length,
       itemBuilder: (_, i) {
         final hazard = hazards[i];
+        print('hazard_check: ${hazard.iconUrl}');
         return InkWell(
           onTap: () => onTap?.call(hazard),
           borderRadius: BorderRadius.circular(16.r),
