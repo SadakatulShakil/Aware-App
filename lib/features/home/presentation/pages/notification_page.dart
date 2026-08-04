@@ -89,7 +89,7 @@ class NotificationPage extends GetView<HomeController> {
 }
 
 // ════════════════════════════════════════════════════════════════════════
-// NOTIFICATION CARD WITH WORKING TTS + PROGRESS (ported 1:1 from BMD)
+// NOTIFICATION CARD WITH WORKING TTS + PROGRESS
 // ════════════════════════════════════════════════════════════════════════
 
 class _NotificationCard extends StatefulWidget {
@@ -173,13 +173,18 @@ class _NotificationCardState extends State<_NotificationCard> with WidgetsBindin
     flutterTts.completionHandler = _onSpeechComplete;
     flutterTts.errorHandler = _onTtsError;
 
-    // CORRECTED PROGRESS HANDLER
-    flutterTts.setProgressHandler((text, start, end, word) {
-      if (mounted && _duration.value.inMilliseconds > 0 && text.isNotEmpty) {
-        double progressPercentage = end / text.length;
-        _position.value = Duration(
-            milliseconds: (_duration.value.inMilliseconds * progressPercentage).round());
-      }
+    // The native word/range progress callback (setProgressHandler) isn't
+    // reliably fired by every Android TTS engine - some never call it at
+    // all, which left the slider frozen. A simple timer against the
+    // estimated duration (see _startProgressTimer) works everywhere.
+  }
+
+  void _startProgressTimer() {
+    _progressTimer?.cancel();
+    _progressTimer = Timer.periodic(const Duration(milliseconds: 200), (_) {
+      if (!mounted || !_isPlaying.value || _isPaused.value) return;
+      final next = _position.value + const Duration(milliseconds: 200);
+      _position.value = next >= _duration.value ? _duration.value : next;
     });
   }
 
@@ -211,8 +216,17 @@ class _NotificationCardState extends State<_NotificationCard> with WidgetsBindin
   }
 
   Future<void> _speak() async {
+    // Guard against double-tap: this flips true synchronously (before any
+    // await below), so a second tap landing while setLanguage/setSpeechRate
+    // /setPitch are still in flight sees _isPlaying == true and routes to
+    // pause instead of calling _speak (and thus flutterTts.speak) again -
+    // that race was why playback fired twice.
+    if (_isPlaying.value) return;
     final rawText = _getFullText();
     if (rawText.isEmpty) return;
+
+    _isPlaying.value = true;
+    _isPaused.value = false;
 
     // Only one card talks at a time - stop whatever was previously
     // playing (and reset its own UI) before starting this one.
@@ -234,9 +248,10 @@ class _NotificationCardState extends State<_NotificationCard> with WidgetsBindin
 
     _duration.value = Duration(milliseconds: estimatedMs);
     _position.value = Duration.zero;
-    _isPlaying.value = true;
-    _isPaused.value = false;
 
+    // Flush any stale queued utterance before starting a fresh one.
+    await flutterTts.stop();
+    _startProgressTimer();
     await flutterTts.speak(cleanText);
   }
 
@@ -251,9 +266,15 @@ class _NotificationCardState extends State<_NotificationCard> with WidgetsBindin
     await flutterTts.setLanguage(isBangla ? 'bn-BD' : 'en-US');
     final cleanText =
         TtsTextHelper.sanitizeTextForBanglaTTS(_getFullText(), isBangla: isBangla);
+    if (mounted) {
+      _isPaused.value = false;
+      // flutter_tts has no real resume-from-position on Android - this
+      // re-speaks from the start, so the slider must restart too or it'd
+      // show a mid-point position while the audio is actually at 0:00.
+      _position.value = Duration.zero;
+    }
+    _startProgressTimer();
     await flutterTts.speak(cleanText);
-    if (mounted) _isPaused.value = false;
-    //_startProgressTimer();
   }
 
   Future<void> _stop() async {
@@ -268,11 +289,16 @@ class _NotificationCardState extends State<_NotificationCard> with WidgetsBindin
   }
 
   // BMD spoke only title; our NotificationModel also carries message, so
-  // both are read (currently the API maps message == title, but this
-  // stays correct if that ever changes).
+  // both are read when they actually differ. Today the API only exposes
+  // a single title field and HomeRepository maps message to that same
+  // value (see _toNotification), so speaking both would just read the
+  // same sentence twice - collapse to one when they match.
   String _getFullText() {
     final n = widget.notification;
-    return '${n.title}. ${n.message}';
+    final title = n.title.trim();
+    final message = n.message.trim();
+    if (message.isEmpty || message == title) return title;
+    return '$title. $message';
   }
 
   String _formatDuration(Duration d) {
