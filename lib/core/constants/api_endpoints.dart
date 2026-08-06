@@ -12,6 +12,8 @@ class ApiEndpoints {
   static const hazardList = '$baseUrl/hazard/list';
   static const ongoingHazard = '$baseUrl/hazard/ongoing';
   static const serviceList = '$baseUrl/service/list';
+  static const incidentReportCreate = '$baseUrl/Incidentreport/create';
+  static const incidentReportRead = '$baseUrl/Incidentreport/read/';
 
   static const bmdBaseUrl = 'https://usf.bmd.gov.bd/api/app';
   static const bmdForecast = '$bmdBaseUrl/weather/forecast';

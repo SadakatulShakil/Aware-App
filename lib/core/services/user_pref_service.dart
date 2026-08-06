@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:uuid/uuid.dart';
 
 import '../../features/home/data/models/saved_location_model.dart';
 
@@ -35,6 +36,7 @@ class UserPrefService {
   static const _kLiveWeatherType = 'live_weather_type';
   static const _kLiveWeatherIcon = 'live_weather_icon';
   static const _kFcmToken = 'FCM_TOKEN';
+  static const _kDeviceId = 'DEVICE_ID';
 
   Future<UserPrefService> init() async {
     _prefs = await SharedPreferences.getInstance();
@@ -59,6 +61,15 @@ class UserPrefService {
   // ---- FCM token (sent to DDM backend, mapped to the user's lat/lon) ----
   String? get fcmToken => _prefs.getString(_kFcmToken);
   Future<void> setFcmToken(String token) => _prefs.setString(_kFcmToken, token);
+
+  // ---- Stable per-install device id (e.g. tags incident reports) ----
+  Future<String> getOrCreateDeviceId() async {
+    final existing = _prefs.getString(_kDeviceId);
+    if (existing != null && existing.isNotEmpty) return existing;
+    final generated = const Uuid().v4();
+    await _prefs.setString(_kDeviceId, generated);
+    return generated;
+  }
 
   // ---- App language ----
   String get appLanguage => _prefs.getString(_kAppLanguage) ?? 'bn';

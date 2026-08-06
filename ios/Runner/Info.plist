@@ -45,5 +45,9 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>AWARE needs camera access so you can attach a photo when reporting an incident.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>AWARE needs photo library access so you can attach a photo when reporting an incident.</string>
 </dict>
 </plist>

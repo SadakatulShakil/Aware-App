@@ -4,6 +4,8 @@
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <!-- Needed for the incident report camera capture (image_picker). -->
+    <uses-permission android:name="android.permission.CAMERA"/>
     <!-- Needed on Android 14+ so alert notifications can show as a
          full-screen intent on the lock screen. -->
     <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT"/>

@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:get/get.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../app/theme/app_text_styles.dart';
 import '../../../../app/theme/app_theme_colors.dart';
 import '../../../../core/constants/app_constants.dart';
+import '../../../../core/services/user_pref_service.dart';
 
 class EmergencyPage extends StatelessWidget {
   const EmergencyPage({super.key});
@@ -17,11 +19,12 @@ class EmergencyPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = AppThemeColors.of(Theme.of(context).brightness == Brightness.dark);
+    final isBangla = Get.find<UserPrefService>().isBangla;
 
     return Scaffold(
       backgroundColor: c.scaffoldBg,
       appBar: AppBar(
-        title: Text('জরুরি সেবা / Emergency',
+        title: Text(isBangla ? 'জরুরি সেবা' : 'Emergency',
             style: AppTextStyles.sectionTitle(c.textPrimary)),
       ),
       body: ListView(
@@ -40,7 +43,9 @@ class EmergencyPage extends StatelessWidget {
                 SizedBox(width: 12.w),
                 Expanded(
                   child: Text(
-                      '২৪/৭ জরুরি হটলাইন সেবা\nবিপদে পড়লে নিচের নম্বরে কল করুন',
+                      isBangla
+                          ? '২৪/৭ জরুরি হটলাইন সেবা\nবিপদে পড়লে নিচের নম্বরে কল করুন'
+                          : '24/7 emergency hotline service\nCall the number below if you are in danger',
                       style: AppTextStyles.body(c.textPrimary)),
                 ),
               ],
@@ -63,10 +68,8 @@ class EmergencyPage extends StatelessWidget {
                     child:
                         Icon(Icons.call, color: c.emergency, size: 20.sp),
                   ),
-                  title: Text(h['titleBn']!,
+                  title: Text(isBangla ? h['titleBn']! : h['title']!,
                       style: AppTextStyles.title(c.textPrimary)),
-                  subtitle: Text(h['title']!,
-                      style: AppTextStyles.caption(c.textSecondary)),
                   trailing: Text(h['number']!,
                       style: TextStyle(
                           fontSize: 16.sp,

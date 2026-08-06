@@ -75,7 +75,7 @@ class PrivacyPolicyPage extends StatelessWidget {
     return Scaffold(
       backgroundColor: c.scaffoldBg,
       appBar: AppBar(
-        title: Text('গোপনীয়তা নীতি / Privacy Policy',
+        title: Text(isBangla ? 'গোপনীয়তা নীতি' : 'Privacy Policy',
             style: AppTextStyles.sectionTitle(c.textPrimary)),
       ),
       body: ListView(

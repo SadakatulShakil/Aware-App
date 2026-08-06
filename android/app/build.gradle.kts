@@ -23,7 +23,9 @@ android {
 
     defaultConfig {
         applicationId = "bd.gov.ddm.aware"
-        minSdk = flutter.minSdkVersion
+        // Hardcoded (not flutter.minSdkVersion) - nsfw_detector_flutter's
+        // bundled TFLite model requires API 26+. Drops Android 5.0-7.1 support.
+        minSdk = 26
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName

@@ -1,12 +1,14 @@
 import 'package:get/get.dart';
 
 import '../../features/drawer/presentation/pages/about_page.dart';
-import '../../features/incident_report/data/models/icident_data_model.dart';
+import '../../features/incident_report/data/models/incident_report_model.dart';
 import '../../features/incident_report/pages/add_incident_report_page.dart';
 import '../../features/drawer/presentation/pages/contact_us_page.dart';
 import '../../features/drawer/presentation/pages/feedback_page.dart';
 import '../../features/incident_report/pages/incident_report_details_page.dart';
 import '../../features/incident_report/pages/incident_report_page.dart';
+import '../../features/incident_report/pages/incident_report_success_page.dart';
+import '../../features/incident_report/pages/my_incident_posts_page.dart';
 import '../../features/drawer/presentation/pages/privacy_policy_page.dart';
 import '../../features/drawer/presentation/pages/risk_information_page.dart';
 import '../../features/emergency/presentation/pages/emergency_page.dart';
@@ -74,7 +76,19 @@ class AppPages {
     GetPage(
       name: AppRoutes.incidentReportDetails,
       page: () => IncidentReportDetailsPage(
-        incident: Get.arguments as IncidentDataModel,
+        incident: Get.arguments as IncidentReportModel,
+      ),
+    ),
+    GetPage(
+      name: AppRoutes.incidentReportSuccess,
+      page: () => IncidentReportSuccessPage(
+        report: Get.arguments as IncidentReportModel,
+      ),
+    ),
+    GetPage(
+      name: AppRoutes.myIncidentPosts,
+      page: () => MyIncidentPostsPage(
+        mobile: Get.arguments as String,
       ),
     ),
     GetPage(

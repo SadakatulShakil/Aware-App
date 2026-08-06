@@ -4,6 +4,7 @@
 
 list(APPEND FLUTTER_PLUGIN_LIST
   connectivity_plus
+  file_selector_windows
   firebase_core
   flutter_tts
   geolocator_windows
@@ -12,6 +13,7 @@ list(APPEND FLUTTER_PLUGIN_LIST
 
 list(APPEND FLUTTER_FFI_PLUGIN_LIST
   jni
+  tflite_flutter
 )
 
 set(PLUGIN_BUNDLED_LIBRARIES)

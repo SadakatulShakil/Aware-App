@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:get/get.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../app/theme/app_text_styles.dart';
 import '../../../../app/theme/app_theme_colors.dart';
 import '../../../../core/constants/app_constants.dart';
+import '../../../../core/services/user_pref_service.dart';
 
 class ContactUsPage extends StatelessWidget {
   const ContactUsPage({super.key});
@@ -27,6 +29,7 @@ class ContactUsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = AppThemeColors.of(Theme.of(context).brightness == Brightness.dark);
+    final isBangla = Get.find<UserPrefService>().isBangla;
 
     final tiles = [
       (
@@ -62,12 +65,14 @@ class ContactUsPage extends StatelessWidget {
     return Scaffold(
       backgroundColor: c.scaffoldBg,
       appBar: AppBar(
-        title: Text('যোগাযোগ করুন / Contact Us', style: AppTextStyles.sectionTitle(c.textPrimary)),
+        title: Text(isBangla ? 'যোগাযোগ করুন' : 'Contact Us',
+            style: AppTextStyles.sectionTitle(c.textPrimary)),
       ),
       body: ListView(
         padding: EdgeInsets.all(16.w),
         children: [
-          Text(AppConstants.orgName, style: AppTextStyles.title(c.textPrimary)),
+          Text(isBangla ? AppConstants.orgNameBn : AppConstants.orgName,
+              style: AppTextStyles.title(c.textPrimary)),
           SizedBox(height: 16.h),
           ...tiles.map((t) => Container(
                 margin: EdgeInsets.only(bottom: 10.h),
@@ -79,7 +84,7 @@ class ContactUsPage extends StatelessWidget {
                         BoxDecoration(color: c.primary.withOpacity(0.1), shape: BoxShape.circle),
                     child: Icon(t.$1, color: c.primary, size: 20.sp),
                   ),
-                  title: Text('${t.$2} / ${t.$3}', style: AppTextStyles.caption(c.textSecondary)),
+                  title: Text(isBangla ? t.$2 : t.$3, style: AppTextStyles.caption(c.textSecondary)),
                   subtitle: Text(t.$4, style: AppTextStyles.body(c.textPrimary)),
                   trailing: t.$5 != null ? Icon(Icons.chevron_right, color: c.textSecondary) : null,
                   onTap: t.$5,

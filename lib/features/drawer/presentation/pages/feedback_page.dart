@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:get/get.dart';
 
 import '../../../../app/theme/app_text_styles.dart';
 import '../../../../app/theme/app_theme_colors.dart';
+import '../../../../core/services/user_pref_service.dart';
 
 class FeedbackPage extends StatefulWidget {
   const FeedbackPage({super.key});
@@ -24,10 +26,10 @@ class _FeedbackPageState extends State<FeedbackPage> {
 
   void _submit() {
     if (!_formKey.currentState!.validate()) return;
+    final isBangla = Get.find<UserPrefService>().isBangla;
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content:
-            Text('আপনার মতামতের জন্য ধন্যবাদ। / Thank you for your feedback.'),
+      SnackBar(
+        content: Text(isBangla ? 'আপনার মতামতের জন্য ধন্যবাদ।' : 'Thank you for your feedback.'),
       ),
     );
     _formKey.currentState!.reset();
@@ -38,18 +40,19 @@ class _FeedbackPageState extends State<FeedbackPage> {
   @override
   Widget build(BuildContext context) {
     final c = AppThemeColors.of(Theme.of(context).brightness == Brightness.dark);
+    final isBangla = Get.find<UserPrefService>().isBangla;
 
     return Scaffold(
       backgroundColor: c.scaffoldBg,
       appBar: AppBar(
-        title: Text('মতামত / Feedback', style: AppTextStyles.sectionTitle(c.textPrimary)),
+        title: Text(isBangla ? 'মতামত' : 'Feedback', style: AppTextStyles.sectionTitle(c.textPrimary)),
       ),
       body: Form(
         key: _formKey,
         child: ListView(
           padding: EdgeInsets.all(16.w),
           children: [
-            Text('আপনি অ্যাপটি কেমন মনে করেন? / How do you find the app?',
+            Text(isBangla ? 'আপনি অ্যাপটি কেমন মনে করেন?' : 'How do you find the app?',
                 style: AppTextStyles.title(c.textPrimary)),
             SizedBox(height: 10.h),
             Row(
@@ -67,21 +70,24 @@ class _FeedbackPageState extends State<FeedbackPage> {
               }),
             ),
             SizedBox(height: 16.h),
-            Text('আপনার মতামত / Your Feedback', style: AppTextStyles.title(c.textPrimary)),
+            Text(isBangla ? 'আপনার মতামত' : 'Your Feedback', style: AppTextStyles.title(c.textPrimary)),
             SizedBox(height: 8.h),
             TextFormField(
               controller: _messageController,
               style: AppTextStyles.body(c.textPrimary),
               maxLines: 6,
               decoration: InputDecoration(
-                hintText: 'আপনার পরামর্শ বা সমস্যার কথা লিখুন / Share your suggestion or issue',
+                hintText: isBangla
+                    ? 'আপনার পরামর্শ বা সমস্যার কথা লিখুন'
+                    : 'Share your suggestion or issue',
                 filled: true,
                 fillColor: c.cardBg,
                 border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12.r), borderSide: BorderSide.none),
               ),
-              validator: (v) =>
-                  (v == null || v.trim().isEmpty) ? 'মতামত লিখুন / Enter your feedback' : null,
+              validator: (v) => (v == null || v.trim().isEmpty)
+                  ? (isBangla ? 'মতামত লিখুন' : 'Enter your feedback')
+                  : null,
             ),
             SizedBox(height: 24.h),
             SizedBox(
@@ -93,7 +99,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
                   padding: EdgeInsets.symmetric(vertical: 14.h),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
                 ),
-                child: Text('পাঠান / Send', style: AppTextStyles.title(c.textOnPrimary)),
+                child: Text(isBangla ? 'পাঠান' : 'Send', style: AppTextStyles.title(c.textOnPrimary)),
               ),
             ),
           ],

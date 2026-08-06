@@ -256,8 +256,8 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(26.r),
-          bottomRight: Radius.circular(26.r),
+          bottomLeft: Radius.circular(16.r),
+          bottomRight: Radius.circular(16.r),
         ),
         boxShadow: [
           BoxShadow(
@@ -269,8 +269,8 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(26.r),
-          bottomRight: Radius.circular(26.r),
+          bottomLeft: Radius.circular(16.r),
+          bottomRight: Radius.circular(16.r),
         ),
         child: Obx(() {
           // Live weather video is the star once it's actually playing -
@@ -689,9 +689,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
       bn: bn,
       en: en,
       activeColor: c.textPrimary,
-      inactiveColor: c.textSecondary,
       activeSize: 17,
-      inactiveSize: 12,
     );
   }
 

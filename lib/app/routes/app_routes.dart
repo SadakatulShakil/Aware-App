@@ -10,6 +10,8 @@ abstract class AppRoutes {
   static const incidentReport = '/incident-report';
   static const incidentReportDetails = '/incident-report-details';
   static const addIncidentReport = '/add_incident-report';
+  static const incidentReportSuccess = '/incident-report-success';
+  static const myIncidentPosts = '/my-incident-posts';
   static const privacyPolicy = '/privacy-policy';
   static const contactUs = '/contact-us';
   static const feedback = '/feedback';

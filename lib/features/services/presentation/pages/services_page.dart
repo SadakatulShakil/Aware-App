@@ -30,7 +30,7 @@ class ServicesPage extends GetView<ServiceController> {
     return Scaffold(
       backgroundColor: c.scaffoldBg,
       appBar: AppBar(
-        title: Text('সেবাসমূহ / Services',
+        title: Text(currentLang == 'bn' ? 'সেবাসমূহ' : 'Services',
             style: AppTextStyles.sectionTitle(c.textPrimary)),
       ),
       body: Obx(() {
