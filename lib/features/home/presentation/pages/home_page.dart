@@ -268,10 +268,10 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
         ],
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(16.r),
-          bottomRight: Radius.circular(16.r),
-        ),
+        // borderRadius: BorderRadius.only(
+        //   bottomLeft: Radius.circular(16.r),
+        //   bottomRight: Radius.circular(16.r),
+        // ),
         child: Obx(() {
           // Live weather video is the star once it's actually playing -
           // drop the decorative glass tint/chips so it isn't dulled by

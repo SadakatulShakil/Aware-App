@@ -14,6 +14,9 @@ class ApiEndpoints {
   static const serviceList = '$baseUrl/service/list';
   static const incidentReportCreate = '$baseUrl/Incidentreport/create';
   static const incidentReportRead = '$baseUrl/Incidentreport/read/';
+  static String incidentReportReadById(String id) => '$baseUrl/Incidentreport/read/$id';
+  static String incidentReportReal(String id) => '$baseUrl/Incidentreport/real/$id';
+  static String incidentReportFake(String id) => '$baseUrl/Incidentreport/fake/$id';
 
   static const bmdBaseUrl = 'https://usf.bmd.gov.bd/api/app';
   static const bmdForecast = '$bmdBaseUrl/weather/forecast';

@@ -12,6 +12,8 @@ class IncidentReportModel {
   final String lat;
   final String lon;
   final String deviceId;
+  final String reportReal;
+  final String reportFake;
   final DateTime? createdAt;
 
   const IncidentReportModel({
@@ -28,6 +30,8 @@ class IncidentReportModel {
     required this.lat,
     required this.lon,
     required this.deviceId,
+    this.reportReal = '0',
+    this.reportFake = '0',
     this.createdAt,
   });
 
@@ -44,6 +48,8 @@ class IncidentReportModel {
         'lat': lat,
         'lon': lon,
         'deviceid': deviceId,
+        'report_real': reportReal,
+        'report_fake': reportFake,
       };
 
   factory IncidentReportModel.fromJson(Map<String, dynamic> json) {
@@ -62,7 +68,30 @@ class IncidentReportModel {
       lat: json['lat']?.toString() ?? '',
       lon: json['lon']?.toString() ?? '',
       deviceId: json['deviceid']?.toString() ?? '',
+      reportReal: json['report_real']?.toString() ?? '0',
+      reportFake: json['report_fake']?.toString() ?? '0',
       createdAt: DateTime.tryParse(json['created_at']?.toString() ?? ''),
+    );
+  }
+
+  IncidentReportModel copyWith({String? reportReal, String? reportFake}) {
+    return IncidentReportModel(
+      id: id,
+      name: name,
+      mobile: mobile,
+      hazardType: hazardType,
+      location: location,
+      deathCount: deathCount,
+      injuredCount: injuredCount,
+      structuralDamage: structuralDamage,
+      imageBase64: imageBase64,
+      description: description,
+      lat: lat,
+      lon: lon,
+      deviceId: deviceId,
+      reportReal: reportReal ?? this.reportReal,
+      reportFake: reportFake ?? this.reportFake,
+      createdAt: createdAt,
     );
   }
 }

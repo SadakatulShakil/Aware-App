@@ -55,6 +55,20 @@ class ApiClient {
     }
   }
 
+  Future<dynamic> patch(String url, {Map<String, dynamic>? body}) async {
+    AppLogger.d('PATCH $url');
+    try {
+      final res = await http
+          .patch(Uri.parse(url), headers: _headers(), body: jsonEncode(body))
+          .timeout(_timeout);
+      return _process(res);
+    } on SocketException {
+      throw ApiException.noInternet();
+    } on TimeoutException {
+      throw ApiException.timeout();
+    }
+  }
+
   dynamic _process(http.Response res) {
     AppLogger.d('<- ${res.statusCode} ${res.request?.url.path}');
     print('Response details: statusCode: ${res.request?.url.path} ${res.statusCode}, body: ${res.body} headers: ${res.headers}');

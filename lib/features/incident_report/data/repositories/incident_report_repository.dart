@@ -36,4 +36,34 @@ class IncidentReportRepository {
     final reports = await fetchAllReports();
     return reports.where((r) => r.mobile == mobile).toList();
   }
+
+  /// A single report by id, fetched fresh (e.g. for the details page so it
+  /// reflects the latest real/fake vote counts rather than stale list data).
+  Future<IncidentReportModel> fetchReportById(String id) async {
+    final json = await _api.get(ApiEndpoints.incidentReportReadById(id));
+    final result = json is Map ? json['result'] : null;
+    Map<String, dynamic>? data;
+    if (result is Map<String, dynamic>) {
+      data = result;
+    } else if (result is List && result.isNotEmpty) {
+      data = result.first as Map<String, dynamic>?;
+    }
+    if (data == null) {
+      throw const ApiException('Report not found');
+    }
+    return IncidentReportModel.fromJson(data);
+  }
+
+  /// Marks a report as real (confirmed).
+  Future<void> confirmReportReal(String reportId) => _vote(ApiEndpoints.incidentReportReal(reportId));
+
+  /// Flags a report as fake.
+  Future<void> confirmReportFake(String reportId) => _vote(ApiEndpoints.incidentReportFake(reportId));
+
+  Future<void> _vote(String url) async {
+    final json = await _api.patch(url);
+    if (json is Map && json['status'] == false) {
+      throw ApiException(json['message']?.toString() ?? 'Failed to submit vote');
+    }
+  }
 }
