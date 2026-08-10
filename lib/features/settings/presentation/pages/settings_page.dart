@@ -29,7 +29,7 @@ class SettingsPage extends StatelessWidget {
         ),
       ),
       body: ListView(
-        padding: EdgeInsets.fromLTRB(16.w, 8.h, 16.w, 110.h),
+        padding: EdgeInsets.fromLTRB(16.w, 8.h, 16.w, 110.h + MediaQuery.of(context).padding.bottom),
         children: [
           _sectionCard(c, 'ভাষা', 'Language', [
             Obx(() => Column(

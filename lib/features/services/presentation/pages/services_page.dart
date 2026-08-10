@@ -45,7 +45,7 @@ class ServicesPage extends GetView<ServiceController> {
         return RefreshIndicator(
           onRefresh: controller.load,
           child: GridView.builder(
-            padding: EdgeInsets.fromLTRB(16.w, 8.h, 16.w, 110.h),
+            padding: EdgeInsets.fromLTRB(16.w, 8.h, 16.w, 110.h + MediaQuery.of(context).padding.bottom),
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2,
               mainAxisSpacing: 12.h,

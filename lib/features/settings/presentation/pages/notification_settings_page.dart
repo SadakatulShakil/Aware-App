@@ -62,7 +62,7 @@ class _NotificationSettingsPageState extends State<NotificationSettingsPage> {
             style: AppTextStyles.sectionTitle(c.textPrimary)),
       ),
       body: ListView(
-        padding: EdgeInsets.fromLTRB(16.w, 8.h, 16.w, 32.h),
+        padding: EdgeInsets.fromLTRB(16.w, 8.h, 16.w, 32.h + MediaQuery.of(context).padding.bottom),
         children: [
           _sectionCard(c, 'alert_notifications'.tr, [
             _tile(

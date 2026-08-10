@@ -69,7 +69,7 @@ class ContactUsPage extends StatelessWidget {
             style: AppTextStyles.sectionTitle(c.textPrimary)),
       ),
       body: ListView(
-        padding: EdgeInsets.all(16.w),
+        padding: EdgeInsets.fromLTRB(16.w, 16.w, 16.w, 16.w + MediaQuery.of(context).padding.bottom),
         children: [
           Text(isBangla ? AppConstants.orgNameBn : AppConstants.orgName,
               style: AppTextStyles.title(c.textPrimary)),

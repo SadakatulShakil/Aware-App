@@ -45,7 +45,7 @@ class HazardPage extends GetView<HazardController> {
         return RefreshIndicator(
           onRefresh: controller.load,
           child: ListView.separated(
-            padding: EdgeInsets.fromLTRB(16.w, 8.h, 16.w, 110.h),
+            padding: EdgeInsets.fromLTRB(16.w, 8.h, 16.w, 110.h + MediaQuery.of(context).padding.bottom),
             itemCount: controller.hazards.length,
             separatorBuilder: (_, __) => SizedBox(height: 10.h),
             itemBuilder: (_, i) {

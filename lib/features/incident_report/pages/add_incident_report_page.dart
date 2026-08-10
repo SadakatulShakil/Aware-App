@@ -173,7 +173,7 @@ class _AddIncidentReportPageState extends State<AddIncidentReportPage> {
       body: Form(
         key: _formKey,
         child: ListView(
-          padding: EdgeInsets.all(16.w),
+          padding: EdgeInsets.fromLTRB(16.w, 16.w, 16.w, 16.w + MediaQuery.of(context).padding.bottom),
           children: [
             Text(isBangla ? 'আপনার নাম' : 'Your Name', style: AppTextStyles.title(c.textPrimary)),
             SizedBox(height: 8.h),

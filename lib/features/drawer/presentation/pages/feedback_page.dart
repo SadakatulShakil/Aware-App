@@ -50,7 +50,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
       body: Form(
         key: _formKey,
         child: ListView(
-          padding: EdgeInsets.all(16.w),
+          padding: EdgeInsets.fromLTRB(16.w, 16.w, 16.w, 16.w + MediaQuery.of(context).padding.bottom),
           children: [
             Text(isBangla ? 'আপনি অ্যাপটি কেমন মনে করেন?' : 'How do you find the app?',
                 style: AppTextStyles.title(c.textPrimary)),

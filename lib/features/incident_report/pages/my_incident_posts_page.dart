@@ -77,7 +77,12 @@ class _MyIncidentPostsPageState extends State<MyIncidentPostsPage> {
             ),
           ),
           Padding(
-            padding: EdgeInsets.all(16.w),
+            padding: EdgeInsets.fromLTRB(
+              16.w,
+              16.w,
+              16.w,
+              16.w + MediaQuery.of(context).padding.bottom,
+            ),
             child: SizedBox(
               width: double.infinity,
               child: OutlinedButton(

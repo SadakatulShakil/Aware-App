@@ -31,7 +31,7 @@ class RiskInformationPage extends StatelessWidget {
             style: AppTextStyles.sectionTitle(c.textPrimary)),
       ),
       body: ListView.separated(
-        padding: EdgeInsets.all(16.w),
+        padding: EdgeInsets.fromLTRB(16.w, 16.w, 16.w, 16.w + MediaQuery.of(context).padding.bottom),
         itemCount: hazards.length,
         separatorBuilder: (_, __) => SizedBox(height: 10.h),
         itemBuilder: (_, i) {

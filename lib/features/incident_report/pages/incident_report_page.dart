@@ -89,7 +89,12 @@ class _IncidentReportPageState extends State<IncidentReportPage> {
               );
             }
             return ListView.separated(
-              padding: EdgeInsets.all(16.w),
+              padding: EdgeInsets.fromLTRB(
+                16.w,
+                16.w,
+                16.w,
+                16.w + MediaQuery.of(context).padding.bottom,
+              ),
               itemCount: reports.length,
               separatorBuilder: (_, __) => SizedBox(height: 16.h),
               itemBuilder: (context, index) {
