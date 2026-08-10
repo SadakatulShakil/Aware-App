@@ -258,7 +258,7 @@ class BaseWeatherCard extends StatelessWidget {
             Icon(Icons.report_outlined, size: 13.r, color: textColor),
             SizedBox(width: 5.w),
             Text('incident_report'.tr,
-                style: AppFonts.style(fontSize: 11.sp, color: textColor, fontWeight: FontWeight.w700)),
+                style: AppFonts.style(fontSize: 11.sp, color: textColor, fontWeight: FontWeight.w600)),
           ],
         ),
       ),

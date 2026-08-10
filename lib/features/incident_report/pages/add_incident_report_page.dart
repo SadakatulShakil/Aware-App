@@ -167,7 +167,7 @@ class _AddIncidentReportPageState extends State<AddIncidentReportPage> {
     return Scaffold(
       backgroundColor: c.scaffoldBg,
       appBar: AppBar(
-        title: Text(isBangla ? 'ঘটনা রিপোর্ট' : 'Incident Report',
+        title: Text(isBangla ? 'ঘটনার রিপোর্ট' : 'Incident Report',
             style: AppTextStyles.sectionTitle(c.textPrimary)),
       ),
       body: Form(

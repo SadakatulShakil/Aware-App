@@ -41,7 +41,7 @@ class _IncidentReportPageState extends State<IncidentReportPage> {
     return Scaffold(
       backgroundColor: c.scaffoldBg,
       appBar: AppBar(
-        title: Text(isBangla ? 'ঘটনা তালিকা' : 'Incident Report',
+        title: Text(isBangla ? 'ঘটনার তালিকা' : 'Incident Report',
             style: AppTextStyles.sectionTitle(c.textPrimary)),
         actions: [
           Padding(

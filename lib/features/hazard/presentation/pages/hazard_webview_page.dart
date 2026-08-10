@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:get/get.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 import '../../../../app/theme/app_theme_colors.dart';
+import '../../../../core/services/user_pref_service.dart';
 
 class HazardWebViewPage extends StatefulWidget {
   final String title;
@@ -27,12 +29,15 @@ class _HazardWebViewPageState extends State<HazardWebViewPage> {
       ..setNavigationDelegate(
         NavigationDelegate(
           onProgress: (progress) => setState(() => _progress = progress / 100),
-          onPageStarted: (_) => setState(() => _hasError = false),
+          onPageStarted: (url) {
+            print('webview url: $url');
+            setState(() => _hasError = false);
+          },
           onPageFinished: (_) => setState(() => _progress = 1),
           onWebResourceError: (_) => setState(() => _hasError = true),
         ),
       )
-      ..loadRequest(Uri.parse(widget.url));
+      ..loadRequest(_urlWithUserContext);
   }
 
   void _retry() {
@@ -40,7 +45,20 @@ class _HazardWebViewPageState extends State<HazardWebViewPage> {
       _hasError = false;
       _progress = 0;
     });
-    _controller.loadRequest(Uri.parse(widget.url));
+    _controller.loadRequest(_urlWithUserContext);
+  }
+
+  /// Appends the user's current language and location to the URL's query
+  /// params so every webview load carries `lang`, `lat`, `lon` -
+  /// merging with (and overriding) any params already on [widget.url].
+  Uri get _urlWithUserContext {
+    final prefs = Get.find<UserPrefService>();
+    final uri = Uri.parse(widget.url);
+    final params = Map<String, String>.from(uri.queryParameters)
+      ..['lang'] = prefs.appLanguage
+      ..['lat'] = prefs.lat ?? ''
+      ..['lon'] = prefs.lon ?? '';
+    return uri.replace(queryParameters: params);
   }
 
   @override

@@ -18,7 +18,11 @@ class AppDrawer extends StatelessWidget {
     final items = <DrawerItem>[
       const DrawerItem(Icons.info_outline, 'drawer_about', AppRoutes.about),
       const DrawerItem(
-          Icons.warning_amber_outlined, 'drawer_risk_information', AppRoutes.riskInformation),
+        Icons.warning_amber_outlined,
+        'drawer_risk_information',
+        AppRoutes.hazardDetails,
+        arguments: {'url': 'https://rapid.ddm.gov.bd/app/webview/riskinfo'},
+      ),
       const DrawerItem(
           Icons.report_outlined, 'drawer_incident_report', AppRoutes.incidentReport),
       const DrawerItem(
@@ -82,7 +86,10 @@ class AppDrawer extends StatelessWidget {
       title: Text(item.labelKey.tr, style: AppTextStyles.body(c.textPrimary)),
       onTap: () {
         Navigator.of(context).pop();
-        Get.toNamed(item.route);
+        final args = item.arguments == null
+            ? null
+            : {...item.arguments!, 'title': item.labelKey.tr};
+        Get.toNamed(item.route, arguments: args);
       },
     );
   }

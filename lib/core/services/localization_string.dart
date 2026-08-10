@@ -149,7 +149,7 @@ class LocalizationString extends Translations {
           'edit': 'সম্পাদনা',
           'delete': 'মুছুন',
 
-          'feels_like_label': 'অনুভূত হচ্ছে',
+          'feels_like_label': 'অনুভূত তাপমাত্রা',
           'temp_unit_full': '°সে',
           'temp_unit_short': 'সে',
           'banner_allow_location': 'সঠিক আবহাওয়া দেখতে অবস্থান অনুমতি দিন',
@@ -161,7 +161,7 @@ class LocalizationString extends Translations {
           'loading_weather': 'আবহাওয়া লোড হচ্ছে...',
           'retry': 'পুনরায় চেষ্টা করুন',
           'switching_location': 'লোকেশন পরিবর্তন হচ্ছে...',
-          'incident_report': 'ঘটনা রিপোর্ট',
+          'incident_report': 'ঘটনার রিপোর্ট',
 
           'notification_settings': 'নোটিফিকেশন সেটিংস',
           'notification_settings_subtitle': 'আপনার নোটিফিকেশন পছন্দ পরিচালনা করুন',
@@ -210,7 +210,7 @@ class LocalizationString extends Translations {
           // App drawer
           'drawer_about': 'অ্যাপ সম্পর্কে',
           'drawer_risk_information': 'ঝুঁকির তথ্য',
-          'drawer_incident_report': 'ঘটনা রিপোর্ট',
+          'drawer_incident_report': 'ঘটনার রিপোর্ট',
           'drawer_privacy_policy': 'গোপনীয়তা নীতি',
           'drawer_contact_us': 'যোগাযোগ করুন',
           'drawer_feedback': 'মতামত',
@@ -218,7 +218,7 @@ class LocalizationString extends Translations {
           'aware_full_name': 'Advanced Warning & Analytics for Risk & Emergencies',
 
           // Incident report page
-          'incident_report_page_title': 'ঘটনা রিপোর্ট',
+          'incident_report_page_title': 'ঘটনার রিপোর্ট',
           'see_more': 'আরও দেখুন...',
         },
       };
